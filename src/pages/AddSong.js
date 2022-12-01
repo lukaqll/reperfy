@@ -2,6 +2,7 @@ import { Box, Button, FormControl, Input, Text } from "native-base";
 import React, { useEffect, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
+import ModalCifrasSearch from "../components/ModalCifrasSearch";
 
 export default function ({route}) {
 
@@ -47,6 +48,7 @@ export default function ({route}) {
                 />
             </FormControl>
             <Button mt={5} onPress={save}>Save</Button>
+            <ModalCifrasSearch isOpen={true}/>
         </Box>
     )
 }

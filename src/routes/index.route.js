@@ -15,7 +15,7 @@ const IndexRoute = function () {
     return (
         <NavigationContainer>
             <Stack.Navigator
-                initialRouteName="Home"
+                initialRouteName="AddSong"
             >
                 <Stack.Screen
                     name='Home'
