@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { LogBox } from "react-native";
 import IndexRoute from "./routes/index.route";
 import Database from "./services/store/Database";
+import styles from "./styles";
 
 export default function () {
     
@@ -17,8 +18,8 @@ export default function () {
     return (
         <NativeBaseProvider>
             <StatusBar
-                barStyle='dark-content'
-                backgroundColor='#FFF'
+                barStyle='light-content'
+                backgroundColor={styles.primaryDark}
             />
             <IndexRoute/>
         </NativeBaseProvider>

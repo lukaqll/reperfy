@@ -1,4 +1,4 @@
-import { Box, Button, Checkbox, CloseIcon, Divider, FlatList, FormControl, Pressable, Heading, HStack, Input, Menu, SearchIcon, Text, VStack, HamburgerIcon } from "native-base";
+import { Box, Checkbox, CloseIcon, Divider, FlatList, FormControl, Pressable, Heading, HStack, Menu, SearchIcon, Text, VStack, HamburgerIcon } from "native-base";
 import React, { useEffect, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import RepertoryStore from "../services/store/RepertoryStore";
@@ -10,6 +10,9 @@ import RepertorySongsStore from "../services/store/RepertorySongsStore";
 import Loader from "../components/Loader";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Input from "../components/Input";
+import Button from "../components/Button";
+import styles from "../styles";
 
 
 export default function ({route}) {
@@ -136,7 +139,6 @@ export default function ({route}) {
             <FormControl p={4}>
                 <FormControl.Label>Nome</FormControl.Label>
                 <Input
-                    bg='#fff'
                     value={rep.name}
                     onChangeText={v => setRep({...rep, name: v})}
                 />
@@ -183,15 +185,14 @@ export default function ({route}) {
                                     </Checkbox>
                                 )}
                             />
-
                         </Checkbox.Group>
                     </Box>
                 </Box>
                 :
                 <Box>
                     <VStack space={3} p={4}>
-                        <Button rounded='full' onPress={() => setAddMode(true)}>ADICIONAR MÚSICAS</Button>
-                        <Button rounded='full' colorScheme='success' onPress={save}>SALVAR</Button>
+                        <Button bg={styles.success} onPress={save}>SALVAR</Button>
+                        <Button onPress={() => setAddMode(true)}>ADICIONAR MÚSICAS</Button>
                     </VStack>
                     <GestureHandlerRootView style={{width:'100%', height:'100%'}}>
                         <DraggableFlatList

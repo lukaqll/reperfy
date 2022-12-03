@@ -1,4 +1,4 @@
-import { Box, CloseIcon, HStack, Input, SearchIcon } from "native-base";
+import { Box, CloseIcon, HStack, Input, SearchIcon, Spinner } from "native-base";
 import React from "react";
 
 export default function (props) {
@@ -10,7 +10,9 @@ export default function (props) {
             rightElement={
                 <Box>
                     <HStack>
-                        <SearchIcon mr={3} onPress={props?.onSearch}/> 
+                        {
+                            props.loading ? <Spinner mr={3}/> : <SearchIcon mr={3} onPress={props?.onSearch}/>
+                        }
                         {
                             props.value?.length ? <CloseIcon mr={3} colorScheme='error' onPress={props?.onClean}/> : null
                         }

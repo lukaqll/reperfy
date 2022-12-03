@@ -1,9 +1,10 @@
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { Box, CloseIcon, FlatList, HamburgerIcon, Heading, HStack, Input, Menu, SearchIcon, Text, Pressable, VStack } from "native-base";
-import React, { useEffect, useState } from "react";
+import { Box, CloseIcon, FlatList, HamburgerIcon, Heading, HStack, Input, Menu, SearchIcon, Text, Pressable, VStack, Button } from "native-base";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import FeaterIcon from 'react-native-vector-icons/Feather'
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import FLoatButton from "../components/FLoatButton";
 import { Alert, StyleSheet } from "react-native";
 import AlphabetList from "react-native-flatlist-alphabet";
@@ -11,9 +12,11 @@ import useCifrasRepo from "../services/repos/cifras";
 export default function () {
 
     const navigation = useNavigation()
+    const isFocused = useIsFocused()
+
     const [songs, setSongs] = useState([])
     const [songSearch, setSongSearch] = useState('')
-    const isFocused = useIsFocused()
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         if (isFocused) {
@@ -21,13 +24,11 @@ export default function () {
         }
     }, [isFocused])
 
-    useEffect(() => {
-        
-    }, [songs])
-
     async function getAllSongs() {
+        setLoading(true)
         const result = await SongStore.getAll()
         setSongs([...result])
+        setLoading(false)
     }
 
     async function deleteSong(id) {
@@ -48,18 +49,24 @@ export default function () {
                     <Text>{item.artist}</Text>
                 </VStack>
                 <Box >
-                    <Menu
-                        placement="left"
-                        trigger={props => (
-                            <Pressable {...props} w={8} h={8} alignItems='center' _pressed={{opacity: .5}}>
-                                <FeaterIcon name='more-vertical' size={20}/>
-                            </Pressable>
-                        )}
-                    >
-                        <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>Editar</Menu.Item>
-                        <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>Add à um repertório</Menu.Item>
-                        <Menu.Item onPress={() => deleteSong(item.id)} _text={{color: '#f00'}}>Deletar</Menu.Item>
-                    </Menu>
+                    <HStack alignItems='center'>
+
+                        {
+                            !!item.cipher ? <MaterialIcon onPress={() => navigation.navigate('CipherView', {id: item.id})} size={25} name='playlist-music-outline'/> : null
+                        }
+                        <Menu
+                            placement="left"
+                            trigger={props => (
+                                <Button {...props} alignItems='center' variant='ghost' size='xs'>
+                                    <FeaterIcon name='more-vertical' size={20}/>
+                                </Button>
+                            )}
+                        >
+                            <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>Editar</Menu.Item>
+                            <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>Add à um repertório</Menu.Item>
+                            <Menu.Item onPress={() => deleteSong(item.id)} _text={{color: '#f00'}}>Deletar</Menu.Item>
+                        </Menu>
+                    </HStack>
                 </Box>
             </HStack>
         )
@@ -84,23 +91,26 @@ export default function () {
                 />
             </Box>
             <Box flex={1}>
-                <AlphabetList
-                    data={songs.filter(i => (
-                            !songSearch
-                            || i.name?.toLowerCase().includes(songSearch.toLowerCase()) 
-                            || i.artist?.toLowerCase().includes(songSearch.toLowerCase()))
-                        ).map(s => ({value: s.name, key: s.id, ...s}))
-                    }
-                    renderItem={renderSongItem}
-                    renderSectionHeader={renderSectionHeader}
-                    indexLetterSize={15}
-                    indexLetterColor='#ff3030'
-                    letterItemStyle={{height: 25}}
-                    letterIndexWidth={0}
-                    alphabetContainer={{
-                        alignSelf: "flex-start",
-                    }}
-                />
+                {
+                    !loading ?
+                    <AlphabetList
+                        data={songs.filter(i => (
+                                !songSearch
+                                || i.name?.toLowerCase().includes(songSearch.toLowerCase()) 
+                                || i.artist?.toLowerCase().includes(songSearch.toLowerCase()))
+                            ).map(s => ({...s, value: s.name || '', key: s.id}))
+                        }
+                        renderItem={renderSongItem}
+                        renderSectionHeader={renderSectionHeader}
+                        indexLetterSize={15}
+                        indexLetterColor='#ff3030'
+                        letterItemStyle={{height: 25}}
+                        letterIndexWidth={0}
+                        alphabetContainer={{
+                            alignSelf: "flex-start",
+                        }}
+                    /> : null
+                }
             </Box>
             <FLoatButton
                 icon={<Icon name='plus' color='#fff' size={25}/>}

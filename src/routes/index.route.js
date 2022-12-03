@@ -3,10 +3,12 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import AddRepertory from "../pages/AddRepertory";
 import AddSong from "../pages/AddSong";
+import CipherView from "../pages/CipherView";
 import Home from "../pages/Home"
 import Repertoires from "../pages/Repertoires";
 import Songs from "../pages/Songs";
 import TestDrag from "../pages/TestDrag";
+import styles from "../styles";
 
 const Stack = createNativeStackNavigator()
 
@@ -15,7 +17,17 @@ const IndexRoute = function () {
     return (
         <NavigationContainer>
             <Stack.Navigator
-                initialRouteName="AddSong"
+                initialRouteName="Home"
+                screenOptions={{
+                    headerStyle: {
+                        backgroundColor: styles.primary,
+                        justifyContent: 'center'
+                    },
+                    headerTintColor: '#fff',
+                    headerTitleStyle: {
+                        fontWeight: 'bold',
+                    },
+                }}
             >
                 <Stack.Screen
                     name='Home'
@@ -44,10 +56,11 @@ const IndexRoute = function () {
                     component={AddRepertory}
                     options={{title: 'Novo Repertório'}}
                 />
+                
                 <Stack.Screen
-                    name='TestDrag'
-                    component={TestDrag}
-                    options={{title: 'Novo Repertório'}}
+                    name='CipherView'
+                    component={CipherView}
+                    options={{title: ''}}
                 />
             </Stack.Navigator>
         </NavigationContainer>
