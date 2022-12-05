@@ -1,5 +1,5 @@
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { Box, CloseIcon, FlatList, HamburgerIcon, Heading, HStack, Input, Menu, SearchIcon, Text, Pressable, VStack, Button } from "native-base";
+import { Box, CloseIcon, FlatList, HamburgerIcon, HStack, Input, Menu, SearchIcon, Pressable, VStack, Button, Fab } from "native-base";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import Icon from 'react-native-vector-icons/FontAwesome5'
@@ -9,6 +9,10 @@ import FLoatButton from "../components/FLoatButton";
 import { Alert, StyleSheet } from "react-native";
 import AlphabetList from "react-native-flatlist-alphabet";
 import useCifrasRepo from "../services/repos/cifras";
+import styles from "../styles";
+import Text from '../components/Text'
+import Heading from '../components/Heading'
+
 export default function () {
 
     const navigation = useNavigation()
@@ -52,18 +56,19 @@ export default function () {
                     <HStack alignItems='center'>
 
                         {
-                            !!item.cipher ? <MaterialIcon onPress={() => navigation.navigate('CipherView', {id: item.id})} size={25} name='playlist-music-outline'/> : null
+                            !!item.cipher ? 
+                            <MaterialIcon color={styles.fontColor} onPress={() => navigation.navigate('CipherView', {id: item.id})} size={25} name='playlist-music-outline'/> 
+                            : null
                         }
                         <Menu
                             placement="left"
                             trigger={props => (
                                 <Button {...props} alignItems='center' variant='ghost' size='xs'>
-                                    <FeaterIcon name='more-vertical' size={20}/>
+                                    <FeaterIcon name='more-vertical' size={20} color={styles.fontColor}/>
                                 </Button>
                             )}
                         >
                             <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>Editar</Menu.Item>
-                            <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>Add à um repertório</Menu.Item>
                             <Menu.Item onPress={() => deleteSong(item.id)} _text={{color: '#f00'}}>Deletar</Menu.Item>
                         </Menu>
                     </HStack>
@@ -74,8 +79,8 @@ export default function () {
 
     const renderSectionHeader = (section) => {
         return (
-            <Box h={30} bg='#ddd' justifyContent='center' px={15} rounded='md'>
-              <Text bold color='#666'>{section.title}</Text>
+            <Box h={30} bg={styles.bgDark} justifyContent='center' px={15} rounded='md'>
+              <Text bold>{section.title}</Text>
             </Box>
         );
     };
@@ -112,11 +117,12 @@ export default function () {
                     /> : null
                 }
             </Box>
-            <FLoatButton
-                icon={<Icon name='plus' color='#fff' size={25}/>}
-                colorScheme='success'
-                onPress={() => navigation.navigate('AddSong')}
+            <Fab
+                icon={<Icon name='plus' color='#fff' size={15}/>}
+                bg={styles.success} onPress={() => navigation.navigate('AddSong')}
+                renderInPortal={false} shadow={2} size="sm"
             />
+            
         </Box>
     )
 }

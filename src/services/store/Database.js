@@ -45,8 +45,10 @@ class Database {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 song_id INTEGER NOT NULL,
                 repertory_id INTEGER NOT NULL,
-                idx INTEGER NULL DEFAULT '0'
-            )`
+                idx INTEGER NULL DEFAULT '0',
+                played INTEGER NULL DEFAULT '0'
+            )`,
+            // `ALTER TABLE repertory_songs ADD COLUMN played INTEGER NULL DEFAULT '0'`
         ];
         queries.forEach(async q => {
             await this.executeSql(q)

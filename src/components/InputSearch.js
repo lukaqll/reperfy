@@ -1,4 +1,5 @@
-import { Box, CloseIcon, HStack, Input, SearchIcon, Spinner } from "native-base";
+import { Box, CloseIcon, HStack, SearchIcon, Spinner } from "native-base";
+import Input from './Input'
 import React from "react";
 
 export default function (props) {

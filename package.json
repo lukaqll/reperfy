@@ -16,6 +16,8 @@
     "native-base": "^3.4.22",
     "react": "18.1.0",
     "react-native": "0.70.6",
+    "react-native-autocomplete-dropdown": "^2.1.0",
+    "react-native-autocomplete-input": "^5.2.0",
     "react-native-dom-parser": "^1.5.3",
     "react-native-draggable-flatlist": "^4.0.0",
     "react-native-flatlist-alphabet": "^1.1.2",

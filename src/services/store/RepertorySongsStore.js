@@ -60,6 +60,25 @@ class RepertoryStore{
             WHERE song_id = ?
         `, [idSong])
     }
+
+    async setPlayed(idSong, idRep, played=1) {
+        return await Database.executeSql(`
+            UPDATE repertory_songs
+                SET played = ?
+            WHERE
+                song_id = ? 
+                AND repertory_id = ?
+        `, [played, idSong, idRep])
+    }
+
+    async unsetAllPlayed(idRep) {
+        return await Database.executeSql(`
+            UPDATE repertory_songs
+                SET played = 0
+            WHERE
+                repertory_id = ?
+        `, [idRep])
+    }
 }
 
 export default new RepertoryStore;

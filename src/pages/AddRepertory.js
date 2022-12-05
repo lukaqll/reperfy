@@ -1,9 +1,9 @@
-import { Box, Checkbox, CloseIcon, Divider, FlatList, FormControl, Pressable, Heading, HStack, Menu, SearchIcon, Text, VStack, HamburgerIcon } from "native-base";
+import { Box, Checkbox, CloseIcon, Divider, FlatList, FormControl, Pressable,  HStack, Menu, SearchIcon, VStack, HamburgerIcon, Toast, ScrollView } from "native-base";
 import React, { useEffect, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import RepertoryStore from "../services/store/RepertoryStore";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { ActivityIndicator, Alert, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Alert, TouchableOpacity, useWindowDimensions } from "react-native";
 import FLoatButton from "../components/FLoatButton";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import RepertorySongsStore from "../services/store/RepertorySongsStore";
@@ -13,6 +13,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Input from "../components/Input";
 import Button from "../components/Button";
 import styles from "../styles";
+import Text from '../components/Text'
+import Heading from '../components/Heading'
 
 
 export default function ({route}) {
@@ -24,9 +26,12 @@ export default function ({route}) {
     const [selectedSongs, setSelectedSongs] = useState([])
     const [loading, setLoading] = useState(false)
     const [addMode, setAddMode] = useState(false)
+    const [formSize, setFormSize] = useState({})
 
     const isFocused = useIsFocused()
     const navigation = useNavigation()
+
+    const {height} = useWindowDimensions()
 
     useEffect(() => {
         if (route.params && (id = route.params.id)) {
@@ -108,7 +113,7 @@ export default function ({route}) {
             }
             navigation.navigate('Repertoires')
         } catch (e) {
-            Alert.alert('Atenção!', e)
+            Toast.show({description: e})
         }
     }
 
@@ -136,13 +141,22 @@ export default function ({route}) {
 
     return (
         <Box h='100%'>
-            <FormControl p={4}>
-                <FormControl.Label>Nome</FormControl.Label>
-                <Input
-                    value={rep.name}
-                    onChangeText={v => setRep({...rep, name: v})}
-                />
-            </FormControl>
+            <Box onLayout={(event) => {setFormSize(event.nativeEvent.layout)}}>
+                <Box p={4}>
+                    <Input
+                        label='Nome'
+                        value={rep.name}
+                        onChangeText={v => setRep({...rep, name: v})}
+                    />
+                </Box>
+                {
+                    !addMode ? 
+                    <VStack space={3} p={4}>
+                        <Button bg={styles.success} onPress={save}>SALVAR</Button>
+                        <Button onPress={() => setAddMode(true)}>ADICIONAR MÚSICAS</Button>
+                    </VStack> : null
+                }
+            </Box>
             <Divider/>
             {
                 addMode ? 
@@ -189,19 +203,21 @@ export default function ({route}) {
                     </Box>
                 </Box>
                 :
-                <Box>
-                    <VStack space={3} p={4}>
-                        <Button bg={styles.success} onPress={save}>SALVAR</Button>
-                        <Button onPress={() => setAddMode(true)}>ADICIONAR MÚSICAS</Button>
-                    </VStack>
-                    <GestureHandlerRootView style={{width:'100%', height:'100%'}}>
-                        <DraggableFlatList
-                            data={selectedSongs}
-                            onDragEnd={({ data }) => setSelectedSongs(data)}
-                            keyExtractor={item => item.id}
-                            renderItem={renderDraggableItem}
-                        /> 
-                    </GestureHandlerRootView>
+                <Box flex={1}>
+                    <Box>
+                        
+                        <Box pb={100}>
+                            <GestureHandlerRootView>
+                                <DraggableFlatList
+                                    style={{height: (height - (formSize.height || 0) - 100)}}
+                                    data={selectedSongs}
+                                    onDragEnd={({ data }) => setSelectedSongs(data)}
+                                    keyExtractor={item => item.id}
+                                    renderItem={renderDraggableItem}
+                                /> 
+                            </GestureHandlerRootView>
+                        </Box>
+                    </Box>
                 </Box>
             }
 
