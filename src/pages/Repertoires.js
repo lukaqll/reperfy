@@ -1,15 +1,18 @@
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { Box, Button, Fab, FlatList, HamburgerIcon, Heading, HStack, Menu, Text, VStack } from "native-base";
+import { Box, Button, Fab, FlatList, HamburgerIcon, Heading, HStack, Menu, Text, VStack, Pressable } from "native-base";
 import React, { useEffect, useState } from "react";
 import RepertoryStore from "../services/store/RepertoryStore";
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import MaterialIcons from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Alert, Pressable } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import FeaterIcon from 'react-native-vector-icons/Feather'
-import styles from "../styles";
+import useStyle from "../styles";
+import LinearGradient from "react-native-linear-gradient";
+import GradientPageBase from "../components/GradientPageBase";
 
 export default function () {
 
+    const styles = useStyle()
     const navigation = useNavigation()
     const [songs, setRepertoires] = useState([])
     const isFocused = useIsFocused()
@@ -43,51 +46,61 @@ export default function () {
         navigation.navigate('RepertoryView', {...item})
     }
 
-    return (
-        <Box p={4} h='100%'>
-                    <Button onPress={() => navigation.navigate('Songs')}>Músicas</Button>
 
-            <FlatList
-                data={songs}
-                renderItem={({item}) => (
-                    <Pressable 
-                        onPress={async () => await onPressHandle(item)}
-                    >
-                        <Box rounded='full' borderWidth={1} borderColor={styles.primary} mt={3} p={2}>
-                            <HStack justifyContent='space-between' alignItems='center' py={2}>
-                                <VStack>
-                                    <Heading size='sm' color={styles.primary}>{item.name}</Heading>
-                                </VStack>
-                                <Box>
-                                    <Menu
-                                        placement="left"
-                                        trigger={props => (
-                                            <Pressable {...props}>
-                                                <FeaterIcon name='more-vertical' size={20} color={styles.primary}/>
-                                            </Pressable>
-                                        )}
-                                    >
-                                        <Menu.Item onPress={() => navigation.navigate('AddRepertory', {id: item.id})}>Editar</Menu.Item>
-                                        <Menu.Item onPress={() => deleteReportory(item.id)} _text={{color: '#f00'}}>Deletar</Menu.Item>
-                                    </Menu>
-                                </Box>
-                            </HStack>
+    function renderItem ({item}) {
+        return (
+            <Pressable 
+                onPress={async () => await onPressHandle(item)}
+                _pressed={{opacity: .7}} my={2}
+            >
+                <LinearGradient 
+                    colors={[styles.primary+'dd', styles.primaryDark+'dd']} 
+                    style={{width: '100%', height: '100%', flex: 1, borderRadius: 30, padding: 10}}
+                >
+                    <HStack justifyContent='space-between' alignItems='center' py={2}>
+                        <VStack>
+                            <Heading size='sm' color={styles.bgDark}>{item.name}</Heading>
+                        </VStack>
+                        <Box>
+                            <Menu
+                                placement="left"
+                                trigger={props => (
+                                    <Pressable {...props}>
+                                        <FeaterIcon name='more-vertical' size={20} color={styles.bgDark}/>
+                                    </Pressable>
+                                )}
+                            >
+                                <Menu.Item onPress={() => navigation.navigate('AddRepertory', {id: item.id})}>Editar</Menu.Item>
+                                <Menu.Item onPress={() => deleteReportory(item.id)} _text={{color: '#f00'}}>Deletar</Menu.Item>
+                            </Menu>
                         </Box>
-                    </Pressable>
-                )}
-            />
+                    </HStack>
+                </LinearGradient>
+            </Pressable>
+        )
+    }
 
-            <Fab
-                bottom={70}
-                icon={<MaterialIcons name='music-note-plus' color='#fff' size={15}/>}
-                bg={styles.success} onPress={() => navigation.navigate('AddSong')}
-                renderInPortal={false} shadow={2} size="sm"
-            />
-            <Fab
-                icon={<Icon name='plus' color='#fff' size={15}/>}
-                bg={styles.success} onPress={() => navigation.navigate('AddRepertory')}
-                renderInPortal={false} shadow={2} size="sm"
-            />
-        </Box>
+    return (
+        <GradientPageBase>
+
+            <Box p={4} h='100%'>
+                <FlatList
+                    data={songs}
+                    renderItem={renderItem}
+                />
+
+                <Fab
+                    bottom={90} p={5}
+                    icon={<MaterialIcons name='music-note-plus' color='#fff' size={15}/>}
+                    bg={styles.primary} onPress={() => navigation.navigate('AddSong')}
+                    renderInPortal={false} shadow={2} size="sm"
+                />
+                <Fab
+                    icon={<Icon name='plus' color='#fff' size={15}/>} p={5}
+                    bg={styles.primary} onPress={() => navigation.navigate('AddRepertory')}
+                    renderInPortal={false} shadow={2} size="sm"
+                />
+            </Box>
+        </GradientPageBase>
     )
 }

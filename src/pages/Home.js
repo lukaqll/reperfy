@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { AddIcon, Box, Button, CheckIcon, Heading, HStack, Icon, IconButton, ScrollView, View, VStack } from "native-base";
 import RepertoryStore from "../services/store/RepertoryStore";
-import styles from "../styles";
+import useStyle from "../styles";
 
 export default function ({navigation}) {
 

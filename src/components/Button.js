@@ -1,9 +1,10 @@
 import { Button } from "native-base";
 import React from "react";
-import styles from "../styles";
+import useStyle from "../styles";
 
 export default function(props) {
 
+    const styles = useStyle()
     return (
         <Button
             rounded='full'

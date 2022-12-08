@@ -4,11 +4,14 @@ import {  Alert, useWindowDimensions } from "react-native";
 import RenderHTML from "react-native-render-html";
 import { useNavigation } from "@react-navigation/native";
 import { actions, RichEditor, RichToolbar } from "react-native-pell-rich-editor";
+import useStyle from "../styles";
+import HTMLCipher from "./HTMLCipher";
 
 export default function (props) {
 
+    const styles = useStyle()
     const navigation = useNavigation()
-    const {width} = useWindowDimensions()
+    const {width, height} = useWindowDimensions()
     const richText = useRef()
 
     const [cifraHTML, setCifraHTML] = useState(null)
@@ -106,11 +109,11 @@ export default function (props) {
         <Modal 
             isOpen={props.isOpen && !!cifraHTML}
             onClose={onCloseHandle}
-            size='full' justifyContent="flex-end"
-            avoidKeyboard 
+            size='full'
+            avoidKeyboard
         >
             <KeyboardAvoidingView behavior="position" enabled w='100%'>
-                <Modal.Content>
+                <Modal.Content >
                     <Modal.CloseButton/>
                     <Modal.Header>
                         <VStack space={4}>
@@ -140,7 +143,7 @@ export default function (props) {
                                                     <Text fontSize='xs'>½ tom</Text>
                                                 </HStack>
                                             </Button>
-                                            <Button onPress={() => change()} variant='outline' size='sm'>
+                                            <Button onPress={() => change()} variant='outline' size='sm' >
                                                 <HStack alignItems='center' space={2}>
                                                     <AddIcon size='xs'/>
                                                     <Text fontSize='xs'>½ tom</Text>
@@ -151,28 +154,19 @@ export default function (props) {
                                 }
 
                                 <Button.Group isAttached >
-                                    <Button variant='outline' size='sm' onPress={editHandle}>{editMode ? 'Alterar tom' : 'Editar'}</Button>
-                                    <Button variant='outline' size='sm' onPress={saveHandle}>OK</Button>
+                                    <Button variant='outline' _text={{color: styles.primary}} size='sm' onPress={editHandle}>{editMode ? 'Alterar tom' : 'Editar'}</Button>
+                                    <Button variant='outline' _text={{color: styles.primary}} size='sm' onPress={saveHandle}>OK</Button>
                                 </Button.Group>
                             </HStack>
                         </VStack>
 
                     </Modal.Header>
-                    <Modal.Body p={0}>
+                    <Modal.Body p={0} h={height}>
                         <Box width='100%' h='100%'>
                         {
                             !editMode ?
-                                <Box p={2}>
-                                    <RenderHTML
-                                        contentWidth={width}
-                                        source={{html: cifraHTML}}
-                                        tagsStyles={{
-                                            span: {
-                                                color: 'orange',
-                                                // fontWeight: 'bold'
-                                            }
-                                        }}
-                                    />
+                                <Box>
+                                    <HTMLCipher song={{cipher: cifraHTML}}/>
                                 </Box>
                                 :
                                 <Box>

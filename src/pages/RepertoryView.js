@@ -1,16 +1,18 @@
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
-import { Box, Button, Checkbox, CheckIcon, Divider, FlatList, HStack, IconButton, Menu, Pressable, VStack } from "native-base";
+import { Box, Button, Checkbox, CheckIcon, ChevronDownIcon, ChevronUpIcon, Divider, FlatList, HStack, IconButton, Menu, Pressable, ScrollView, VStack } from "native-base";
 import React, { useEffect, useRef, useState } from "react";
 import Loader from "../components/Loader";
 import RepertoryStore from "../services/store/RepertoryStore";
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import FeaterIcon from 'react-native-vector-icons/Feather'
-import styles from "../styles";
+import useStyle from "../styles";
 import RepertorySongsStore from "../services/store/RepertorySongsStore";
 import { Alert } from "react-native";
 import Text from '../components/Text'
 import Heading from '../components/Heading'
 import InputSearch from '../components/InputSearch'
+import GradientPageBase from "../components/GradientPageBase";
+import RepertoryGroupsStore from "../services/store/RepertoryGroupsStore";
 
 
 export default function() {
@@ -19,11 +21,13 @@ export default function() {
     const isFocused = useIsFocused()
     const navigation = useNavigation()
     const songsRef = useRef()
+    const styles = useStyle()
 
     const [songs, setSongs] = useState([])
     const [loading, setLoading] = useState(false)
     const [search, setSearch] = useState('')
     const [onlyNotPlayed, setOnlyNotPlayed] = useState(false)
+    const [closedGroups, setClosedGroups] = useState([])
 
     useEffect(() => {
         if (isFocused && route.params.id) {
@@ -47,7 +51,7 @@ export default function() {
         })
     }, [onlyNotPlayed])
 
-    function getListedSongs() {
+    function getListedSongs(songs) {
         let out = [...songs]
         if (onlyNotPlayed) {
             out = out.filter(s => !s.played)
@@ -67,7 +71,7 @@ export default function() {
                 closeOnSelect={false}
                 trigger={props => (
                     <Button {...props} alignItems='center' variant='ghost' size='xs'>
-                        <FeaterIcon name='more-vertical' size={20} color='#fff'/>
+                        <FeaterIcon name='more-vertical' size={20} color={styles.fontColor}/>
                     </Button>
                 )}
             >
@@ -86,19 +90,22 @@ export default function() {
             </Menu>
         )
     }
+
     async function getSongs(id) {
         setLoading(true)
-        let songs = await RepertoryStore.getSongs(id)
+        let songs = await RepertoryGroupsStore.getWithSongs(id)
         setSongs([...songs])
         setLoading(false)
     }
 
     function onPlayHandle(item) {
-        let newSongs = [...songs]
-        let newItem = newSongs.find(s => s.id == item.id)
-        newItem.played = !newItem.played
-        setSongs([...newSongs])
-        RepertorySongsStore.setPlayed(item.id, route.params.id, newItem.played)
+        let groups = [...songs]
+        let group = groups.find(g => g.id == item.group_id)
+        let song = group.songs.find(s => s.id == item.id)
+
+        song.played = !song.played
+        setSongs([...groups])
+        RepertorySongsStore.setPlayed(song.id, group.id, song.played)
                            .then()
     }
 
@@ -107,26 +114,29 @@ export default function() {
         Alert.alert('Desmarcar as músicas já tocadas?', '', [
             {text: 'Não'},
             {text: 'Sim', onPress: () => {
-
                 RepertorySongsStore.unsetAllPlayed(route.params.id)
                                    .then()
-
-                let newSongs = [...songsRef.current]
-
-                for (i in newSongs){
-                    newSongs[i].played = 0
+                let groups = [...songsRef.current]
+                for (i in groups){
+                    for (j in groups[i].songs)
+                        groups[i].songs[j].played = 0
                 }
-                setSongs([...newSongs])
+                setSongs([...groups])
             }},
         ])
     }
 
-    function renderSong({item}) {
+    function renderSong(item, group, i) {
+        group = {
+            id: group.id,
+            name: group.name,
+        }
+        
         return (
             <Pressable 
                 _pressed={{opacity: .7}} 
                 mx={3} my={1} rounded={8} p={2}
-                shadow={4}
+                shadow={4} key={i}
                 bg={styles.bgDark}
                 onLongPress={() => onPlayHandle(item)}
                 borderLeftColor={item.played ? styles.bgDark : styles.primaryDark}
@@ -143,7 +153,7 @@ export default function() {
                     </VStack>
                     {
                         !!item.cipher ? 
-                        <MaterialIcon onPress={() => navigation.navigate('CipherView', {id: item.id, repId: route.params.id})} size={20} name='playlist-music-outline' color={styles.fontColor}/> 
+                        <MaterialIcon onPress={() => navigation.navigate('CipherView', {id: item.id, repId: route.params.id, group})} size={20} name='playlist-music-outline' color={styles.fontColor}/> 
                         : null
                     }
                 </HStack>
@@ -151,22 +161,63 @@ export default function() {
         )
     }
 
-    return (
-        <Box py={3}>
-            <Box p={3}>
-                <InputSearch onChangeText={setSearch} value={search} onClean={() => setSearch('')}/>
-            </Box>
-            <Box>
+    function groupToggleHande(item) {
+        let closed = closedGroups
+        let idx = closed.findIndex(i => i == item.id)
+
+        if (idx >= 0) {
+            delete closed[idx]
+        } else {
+            closed = [...closed, item.id]
+        }
+
+        setClosedGroups([...closed])
+    }
+
+    function renderGroup(item) {
+        const isGroupClosed = closedGroups.includes(item.id)
+        return (
+            <Box w='100%' key={item.id}>
+                <Pressable 
+                    p={2}
+                    bg={styles.bgDark}
+                    onPress={() => groupToggleHande(item)}
+                >
+                    <HStack justifyContent='space-between' alignItems='center'>
+                        <Heading size='sm'>{item.name}</Heading>
+                        <Pressable>
+                            {isGroupClosed ? 
+                            <ChevronDownIcon color={styles.fontColor}/> 
+                            : <ChevronUpIcon color={styles.fontColor}/>}
+                        </Pressable>
+                    </HStack>
+                </Pressable>
                 {
-                    !loading ?
-                    <FlatList
-                        renderItem={renderSong}
-                        keyExtractor={(_,i) => i}
-                        data={getListedSongs()}
-                    />
-                    : <Loader loading={true}/>
+                    !isGroupClosed ?
+                    <Box py={2}>
+                        {getListedSongs(item.songs).map((songItem, i) => renderSong(songItem, item, i))}
+                    </Box> : null
                 }
             </Box>
-        </Box>
+        )
+    }
+
+    return (
+        <GradientPageBase>
+            <Box py={3}>
+                <ScrollView>
+                    <Box p={3}>
+                        <InputSearch onChangeText={setSearch} value={search} onClean={() => setSearch('')}/>
+                    </Box>
+                    <VStack space={.5}>
+                        {
+                            !loading ?
+                            songs.map(renderGroup)
+                            : <Loader loading={true}/>
+                        }
+                    </VStack>
+                </ScrollView>
+            </Box>
+        </GradientPageBase>
     )
 }

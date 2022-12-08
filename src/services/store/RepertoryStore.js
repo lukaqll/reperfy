@@ -1,5 +1,5 @@
 import Database from './Database';
-import RepertorySongsStore from './RepertorySongsStore';
+import RepertoryGroupsStore from './RepertoryGroupsStore';
 
 class RepertoryStore{
 
@@ -32,7 +32,9 @@ class RepertoryStore{
     }
 
     async delete(id) {
-        await RepertorySongsStore.detachAllSongs(id)
+
+        await RepertoryGroupsStore.deleteByRepertory(id)
+
         return await Database.executeSql(`
             DELETE FROM repertoires WHERE id = ?;
         `, [id]);

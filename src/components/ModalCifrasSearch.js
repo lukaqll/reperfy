@@ -1,9 +1,13 @@
-import { Box, FormControl, Heading, HStack, Image, KeyboardAvoidingView, Modal, Pressable, Text, VStack } from "native-base";
+import { Box, FormControl, Heading, HStack, Image, KeyboardAvoidingView, Modal, Pressable, ScrollView, Text, VStack } from "native-base";
 import React, { useEffect, useState } from "react";
 import useCifrasRepo from "../services/repos/cifras";
 import InputSearch from "./InputSearch";
-import { Alert } from "react-native";
+import { Alert, Keyboard } from "react-native";
+import useStyle from "../styles";
+import Svg, { SvgUri } from "react-native-svg";
 export default function (props) {
+
+    const styles = useStyle()
 
     const cifrasRepo = useCifrasRepo()
 
@@ -17,18 +21,25 @@ export default function (props) {
 
             if (props.initialSongName) {
                 setSearch(props.initialSongName)
+                searchCifras(props.initialSongName)
             }
+        } else {
+            setSearch(null)
+            setSongs([])
         }
-        setLoading(false)
 
     }, [props.isOpen])
 
-    async function searchCifras() {
-        if (!search)
+    async function searchCifras(term = null) {
+
+        let toSearch = search || (typeof term == 'string' ? term : null)
+
+        if (!toSearch)
             return
 
+        Keyboard.dismiss()
         setLoading(true)
-        let result = await cifrasRepo.searchSongs(search)
+        let result = await cifrasRepo.searchSongs(toSearch)
         setSongs(result.data.songs)
         setLoading(false)
     }
@@ -76,11 +87,12 @@ export default function (props) {
                 <HStack space={2} alignItems='center'>
                     {
                         song.AVATAR && !song.AVATAR.match(/.svg$/g) ?
-                        <Image src={song.AVATAR} alt='.' size='xs' rounded='md'/> : null
+                        <Image src={song.AVATAR} alt='.' size='xs' rounded='md'/> : 
+                        <SvgUri uri={song.AVATAR} width={40} height={40}/>
                     }
                     <VStack>
-                        <Heading fontSize='sm'>{song.TITULO}</Heading>
-                        <Text fontSize='xs'>{song.ARTISTA}</Text>
+                        <Heading fontSize='sm' color={styles.fontColor}>{song.TITULO}</Heading>
+                        <Text fontSize='xs' color={styles.fontColor}>{song.ARTISTA}</Text>
                     </VStack>
                 </HStack>
             </Pressable>
@@ -92,13 +104,12 @@ export default function (props) {
             isOpen={props.isOpen}
             onClose={props.onClose}
             size='full'
-            avoidKeyboard
         >
-            <Modal.Content>
-                <Modal.CloseButton/>
-                <Modal.Header>
+            <Modal.Content bgColor={styles.bgDark} >
+                <Modal.CloseButton />
+                <Modal.Header bgColor={styles.bgDark} >
                     <VStack space={4}>
-                        <Heading size='md'>Buscar cifra</Heading>
+                        <Heading size='md' color={styles.fontColor}>Buscar cifra</Heading>
                         <FormControl>
                             <InputSearch
                                 value={search}
@@ -111,12 +122,10 @@ export default function (props) {
                     </VStack>
 
                 </Modal.Header>
-                <Modal.Body>
-                    <Box>
+                <Modal.Body >
                         <VStack space={2}>
                             {songs.map(renderItem)}
                         </VStack>
-                    </Box>
                 </Modal.Body>
             </Modal.Content>
         </Modal>

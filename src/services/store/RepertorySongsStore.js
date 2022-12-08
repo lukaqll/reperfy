@@ -47,11 +47,11 @@ class RepertoryStore{
         return out
     }
 
-    async detachAllSongs(idRep) {
+    async detachAllSongsByGroup(idGroup) {
         return await Database.executeSql(`
-            DELETE FROM  repertory_songs 
-            WHERE repertory_id = ?
-        `, [idRep])
+            DELETE FROM repertory_songs 
+            WHERE group_id = ?
+        `, [idGroup])
     }
 
     async deleteBySong(idSong) {
@@ -67,17 +67,63 @@ class RepertoryStore{
                 SET played = ?
             WHERE
                 song_id = ? 
-                AND repertory_id = ?
+                AND group_id = ?
         `, [played, idSong, idRep])
     }
 
     async unsetAllPlayed(idRep) {
+
+        let allSongs = await this.getAllByRepertoryToUnplay(idRep)
+        if (!allSongs)
+            return
+
+        let idsRs = allSongs.map(i => i.id)
+
         return await Database.executeSql(`
             UPDATE repertory_songs
                 SET played = 0
-            WHERE
-                repertory_id = ?
+            WHERE id IN (${idsRs.join(',')})
+        `)
+    }
+
+    async getAllByRepertoryToUnplay(idRep) {
+
+        let result = await Database.executeSql(`
+            SELECT 
+                rs.*
+            FROM
+                repertory_songs rs
+                JOIN repertory_groups g ON g.id = rs.group_id
+                    AND g.repertory_id = ?
+                    AND rs.played = 1
+            GROUP BY rs.id
         `, [idRep])
+
+
+        let out = []
+        for( let i = 0; i < result.rows.length; i++ ){
+            out.push(result.rows.item(i))
+        }
+        return out
+    }
+
+    async getAllByRepertoryToDelte(idRep) {
+
+        let result = await Database.executeSql(`
+            SELECT 
+                rs.*
+            FROM
+                repertory_songs rs
+                JOIN repertory_groups g ON g.id = rs.group_id
+                    AND g.repertory_id = ?
+            GROUP BY rs.id
+        `, [idRep])
+
+        let out = []
+        for( let i = 0; i < result.rows.length; i++ ){
+            out.push(result.rows.item(i))
+        }
+        return out
     }
 }
 

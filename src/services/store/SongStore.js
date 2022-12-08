@@ -61,41 +61,12 @@ class SongStore{
         }
         return out
     }
-    async findWithNextAndPrevious(id, repId) {
-        // const result = await Database.executeSql(`
-        //     SELECT 
-        //         s.*,
-        //         prev.song_id as prev_song_id,
-        //         s_p.name as prev_song_name,
-                
-        //         next.song_id as next_song_id,
-        //         s_n.name as next_song_name
-        //     FROM 
-        //         songs s
-        //     JOIN repertory_songs rs 
-        //         ON rs.song_id = s.id
-        //         AND rs.repertory_id = ?
-
-        //     LEFT JOIN repertory_songs next
-        //         ON next.repertory_id = rs.repertory_id
-        //         AND next.idx > rs.idx
-        //     LEFT JOIN songs s_n
-        //         ON s_n.id = next.song_id
-            
-        //     LEFT JOIN repertory_songs prev
-        //         ON prev.repertory_id = rs.repertory_id
-        //         AND prev.idx < rs.idx
-        //     LEFT JOIN songs s_p
-        //         ON s_p.id = prev.song_id
-                            
-        //     WHERE s.id = ?
-        //     ORDER BY next.idx, prev.idx desc
-        //     LIMIT 1;
-        // `, [repId, id]);
+    async findWithNextAndPrevious(id, repId, groupId) {
 
         let result = await this.find(id)
+        result.group_id = groupId
         if (result) {
-            result.next = await this.getNextSong(id, repId)
+            result.next = await this.getNextSong(id, repId, groupId)
             result.prev = await this.getPrevSong(id, repId)
         }
 
@@ -103,54 +74,82 @@ class SongStore{
         
     }
 
-    async getNextSong(songId, repId) {
+    async getNextSong(songId, repId, groupId) {
         const result = await Database.executeSql(`
-            SELECT 
-                ns.*
+            SELECT
+               ns.*,
+               concrete_next_group.id as next_group_id
             FROM
                 songs s
+
             JOIN repertory_songs cur 
                 ON cur.song_id = s.id
-                AND cur.repertory_id = ?
+            JOIN repertory_groups rg
+                ON cur.group_id = rg.id
+                AND rg.repertory_id = '${repId}'
+                AND rg.id = '${groupId}'
             
+            JOIN repertory_groups next_rg
+               ON next_rg.repertory_id = rg.repertory_id
+               
             JOIN repertory_songs next
-                ON next.repertory_id = cur.repertory_id
-                AND next.idx > cur.idx
+                ON ( 
+                             ( next.group_id = cur.group_id AND next.idx > cur.idx ) 
+                              OR 
+                              ( next.group_id != cur.group_id AND next.idx < cur.idx AND  next_rg.idx > rg.idx  )
+                       )
+                      
             JOIN songs ns
                 ON ns.id = next.song_id
-                AND ns.cipher != ''
-                AND ns.cipher IS NOT NULL
-
-            WHERE s.id = ?
-            ORDER BY next.idx
+               AND s.id != ns.id
+            JOIN repertory_groups concrete_next_group
+                ON concrete_next_group.id = next.group_id
+               
+            WHERE s.id = '${songId}'
+            
+            ORDER BY next_rg.idx, next.idx
             LIMIT 1;
-        `, [repId, songId])
+        `)
 
         return result.rows.item(0)
     }
 
-    async getPrevSong(songId, repId) {
+    async getPrevSong(songId, repId, groupId) {
         const result = await Database.executeSql(`
-            SELECT 
-                ps.*
-            FROM
-                songs s
-            JOIN repertory_songs cur 
-                ON cur.song_id = s.id
-                AND cur.repertory_id = ?
-            
-            JOIN repertory_songs prev
-                ON prev.repertory_id = cur.repertory_id
-                AND prev.idx < cur.idx
-            JOIN songs ps
-                ON ps.id = prev.song_id
-                AND ps.cipher != ''
-                AND ps.cipher IS NOT NULL
+        SELECT
+            ps.*,
+            concrete_prev_group.id as prev_group_id
+        FROM
+            songs s
 
-            WHERE s.id = ?
-            ORDER BY prev.idx desc
-            LIMIT 1;
-        `, [repId, songId])
+        JOIN repertory_songs cur 
+            ON cur.song_id = s.id
+        JOIN repertory_groups rg
+            ON cur.group_id = rg.id
+            AND rg.repertory_id = '${repId}'
+            AND rg.id = '${groupId}'
+        
+        JOIN repertory_groups prev_rg
+            ON prev_rg.repertory_id = rg.repertory_id
+            
+        JOIN repertory_songs prev
+            ON ( 
+                    ( prev.group_id = cur.group_id AND prev.idx < cur.idx ) 
+                    OR 
+                    ( prev.group_id != cur.group_id AND prev.idx > cur.idx AND  prev_rg.idx < rg.idx  )
+                )
+                
+        JOIN songs ps
+            ON ps.id = prev.song_id
+            AND s.id != ps.id
+        JOIN repertory_groups concrete_prev_group
+            ON concrete_prev_group.id = prev.group_id
+            
+        WHERE s.id = '${songId}'
+        
+        ORDER BY prev_rg.idx desc, prev.idx desc
+        LIMIT 1;
+        `)
 
         return result.rows.item(0)
     }

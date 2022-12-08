@@ -9,14 +9,17 @@ import FLoatButton from "../components/FLoatButton";
 import { Alert, StyleSheet } from "react-native";
 import AlphabetList from "react-native-flatlist-alphabet";
 import useCifrasRepo from "../services/repos/cifras";
-import styles from "../styles";
+import useStyle from "../styles";
 import Text from '../components/Text'
 import Heading from '../components/Heading'
+import InputSearch from "../components/InputSearch";
+import GradientPageBase from "../components/GradientPageBase";
 
 export default function () {
 
     const navigation = useNavigation()
     const isFocused = useIsFocused()
+    const styles = useStyle()
 
     const [songs, setSongs] = useState([])
     const [songSearch, setSongSearch] = useState('')
@@ -86,43 +89,43 @@ export default function () {
     };
 
     return (
-        <Box p={4} h='100%'>
-            <Box mb={3}>
-                <Input
-                    value={songSearch} onChangeText={setSongSearch}
-                    py={.5} bg='#fff' rounded='full'
-                    rightElement={!songSearch ? <SearchIcon mr={3}/> : <CloseIcon mr={3} colorScheme='error' onPress={() => setSongSearch(null)}/>}
-                    placeholder='Buscar'
+        <GradientPageBase>
+            <Box p={4} h='100%'>
+                <Box mb={3}>
+                    <InputSearch
+                        value={songSearch} onChangeText={setSongSearch}
+                        onClean={() => setSongSearch(null)}
+                    />
+                </Box>
+                <Box flex={1}>
+                    {
+                        !loading ?
+                        <AlphabetList
+                            data={songs.filter(i => (
+                                    !songSearch
+                                    || i.name?.toLowerCase().includes(songSearch.toLowerCase()) 
+                                    || i.artist?.toLowerCase().includes(songSearch.toLowerCase()))
+                                ).map(s => ({...s, value: s.name || '', key: s.id}))
+                            }
+                            renderItem={renderSongItem}
+                            renderSectionHeader={renderSectionHeader}
+                            indexLetterSize={15}
+                            indexLetterColor='#ff3030'
+                            letterItemStyle={{height: 25}}
+                            letterIndexWidth={0}
+                            alphabetContainer={{
+                                alignSelf: "flex-start",
+                            }}
+                        /> : null
+                    }
+                </Box>
+                <Fab
+                    icon={<Icon name='plus' color='#fff' size={15}/>}
+                    bg={styles.success} onPress={() => navigation.navigate('AddSong')}
+                    renderInPortal={false} shadow={2} size="sm"
                 />
+                
             </Box>
-            <Box flex={1}>
-                {
-                    !loading ?
-                    <AlphabetList
-                        data={songs.filter(i => (
-                                !songSearch
-                                || i.name?.toLowerCase().includes(songSearch.toLowerCase()) 
-                                || i.artist?.toLowerCase().includes(songSearch.toLowerCase()))
-                            ).map(s => ({...s, value: s.name || '', key: s.id}))
-                        }
-                        renderItem={renderSongItem}
-                        renderSectionHeader={renderSectionHeader}
-                        indexLetterSize={15}
-                        indexLetterColor='#ff3030'
-                        letterItemStyle={{height: 25}}
-                        letterIndexWidth={0}
-                        alphabetContainer={{
-                            alignSelf: "flex-start",
-                        }}
-                    /> : null
-                }
-            </Box>
-            <Fab
-                icon={<Icon name='plus' color='#fff' size={15}/>}
-                bg={styles.success} onPress={() => navigation.navigate('AddSong')}
-                renderInPortal={false} shadow={2} size="sm"
-            />
-            
-        </Box>
+        </GradientPageBase>
     )
 }

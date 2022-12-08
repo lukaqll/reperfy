@@ -1,18 +1,21 @@
-const mode = 'dark'
+import { useEffect } from "react"
+import { connect, useSelector } from "react-redux"
+
+
 
 const defColors = {
 
-    primary: '#851DE0',
+    primary: '#02b075',
     secondary: '#F21170',
+
     warning: '#FA9905',
-    success: '#00AF91',
+    success: '#02b075',
     danger: '#FF0000',
 
     // dark
-    primaryDark: '#6500BE',
+    primaryDark: '#009663',
     fontColor: '#333',
 
-    mode
 }
 
 /**
@@ -21,8 +24,9 @@ const defColors = {
 const light = {
     ...defColors,
 
-    bgLight: '#dfeffa',
-    bgDark: '#a5d8fc',
+    bgLight: '#e1e1e1',
+    bgLight2: '#f1f1f1',
+    bgDark: '#FFF',
     fontColor: '#2f2f2f',
 
     // input
@@ -37,21 +41,29 @@ const light = {
 const dark = {
     ...defColors,
 
-    bgLight: '#1e1e1e',
-    bgDark: '#333',
+    bgLight: '#111',
+    bgLight2: '#333',
+    bgDark: '#222',
     fontColor: '#DDD',
 
     // input
-    bgInput: '#FFF',
+    bgInput: '#333',
     labelColor: '#fff'
 }
 
-function getPallet () {
+function useStyle () {
+
+    const selector = useSelector(state => state.theme)
+    const mode = selector.mode
+
+    let result = light
+    
     if (mode == 'dark') {
-        return  dark
+        result = dark
     }
 
-    return light
+    result.mode = mode
+    return result
 }
 
-export default getPallet()
+export default useStyle

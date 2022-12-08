@@ -1,50 +1,47 @@
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
-import { ArrowBackIcon, Box, Button, ChevronLeftIcon, ChevronRightIcon, HStack, Pressable, ScrollView, VStack } from "native-base";
+import { ArrowBackIcon, Box, Button, ChevronLeftIcon, ChevronRightIcon, HStack, Pressable, VStack } from "native-base";
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, useWindowDimensions } from "react-native";
-import RenderHTML, {domNodeToHTMLString} from "react-native-render-html";
 import SongStore from "../services/store/SongStore";
-import styles from "../styles";
+import useStyle from "../styles";
 import Text from '../components/Text'
 import Heading from '../components/Heading'
-import WebView from "react-native-webview";
+import HTMLCipher from "../components/HTMLCipher";
 
 export default function () {
 
     const route = useRoute()
     const navigation = useNavigation()
     const isFocused = useIsFocused()
-    const {width} = useWindowDimensions()
-    const cipherRef = useRef()
+    const styles = useStyle()
+    const songRef = useRef()
+    const groupIdRef = useRef()
 
     const [song, setSong] = useState({})
     const [loading, setLoading] = useState(false)
-    const [repId, setRepId] = useState(null)
+    const [initialGroupId, setInitialGroupId] = useState(null)
 
     useEffect(() => {
         if (isFocused && route.params) {
-
             findSong(route.params.id)
         }
     }, [isFocused, route.params.id])
 
-    useEffect(() => {
-        if (cipherRef.current) {
-            // cipherRef.injectedJavaScript('alert(1)')
-        }
-    }, [cipherRef])
 
     useEffect(() => {
+        songRef.current = {...song}
+
         if (song && song.id) {
+
             navigation.setOptions({
                 headerLeft: () => (
                     <HStack alignItems='center' space={5}>
                         <Pressable _pressed={{opacity: .5}} onPress={navigation.goBack}>
-                            <ArrowBackIcon color='#FFF' size={21}/>
+                            <ArrowBackIcon color={styles.fontColor} size={21}/>
                         </Pressable>
                         <VStack>
-                            <Heading size='sm' color='#FFF'>{song.name}</Heading>
-                            <Text fontSize='xs' color='#FFF'>{song.artist}</Text>
+                            <Heading size='sm' color={styles.fontColor}>{song.name}</Heading>
+                            <Text fontSize='xs' color={styles.fontColor}>{song.artist}</Text>
+                            {/* <Text>{currentGroupId}</Text> */}
                         </VStack>
                     </HStack>
                 ),
@@ -54,11 +51,11 @@ export default function () {
 
                     return (
                         <Button.Group isAttached>
-                            <Button isDisabled={!song.prev?.id} variant='ghost' onPress={() => findSong(song.prev?.id)}>
-                                <ChevronLeftIcon color='#FFF'/>
+                            <Button isDisabled={!song.prev?.id} variant='ghost' onPress={() => findSong(song.prev?.id, song.prev?.prev_group_id)}>
+                                <ChevronLeftIcon color={styles.primary}/>
                             </Button>
-                            <Button isDisabled={!song.next?.id} variant='ghost' onPress={() => findSong(song.next?.id)}>
-                                <ChevronRightIcon color='#FFF'/>
+                            <Button isDisabled={!song.next?.id} variant='ghost' onPress={() => findSong(song.next?.id, song.next?.next_group_id)}>
+                                <ChevronRightIcon color={styles.primary}/>
                             </Button>
                         </Button.Group>
                     )
@@ -67,11 +64,11 @@ export default function () {
         }
     }, [song])
 
-    async function findSong(id) {
+    async function findSong(id, groupId = route.params.group.id) {
         setLoading(true)
         let result = {}
         if (route.params.repId) {
-            result = await SongStore.findWithNextAndPrevious(id, route.params.repId)
+            result = await SongStore.findWithNextAndPrevious(id, route.params.repId, groupId)
         } else {
             result = await SongStore.find(id)
         }
@@ -79,40 +76,12 @@ export default function () {
         setLoading(false)
     }
 
-    function getHtmlWithStyle() {
-
-        return `
-            <html>
-                <style>
-                    span {
-                        color: ${styles.warning};
-                        font-weight: bold
-                    }
-                    pre {
-                        color: ${styles.fontColor};
-                        line-height: 1.5
-                    }
-                </style>
-                ${song.cipher || '<span>Nenhuma cifra</span>'}
-            </html>
-        `
-    }
-
     return (
-        <Box px={2}>
+        <Box pt={50}>
             {
                 song?
                 <Box h='100%' w='100%'>
-                    <WebView
-                        ref={cipherRef}
-                        source={{html: getHtmlWithStyle()}}
-                        style={{backgroundColor: styles.bgLight, flex: 1, height: '100%'}}
-                        scalesPageToFit={Platform.OS == 'adnroid'}
-
-                        nestedScrollEnabled={false}
-                        scrollEnabled={false}
-                        overScrollMode='content'
-                    />
+                    <HTMLCipher song={song}/>
                 </Box>
                 : null
             }
