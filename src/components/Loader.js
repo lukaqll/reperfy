@@ -17,6 +17,7 @@ function Loader (props) {
             w={width} h={height}
             alignItems='center' 
             justifyContent='center'
+            zIndex={9999}
         >
 
             <Spinner

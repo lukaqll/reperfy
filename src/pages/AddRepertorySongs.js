@@ -15,10 +15,12 @@ import Button from "../components/Button";
 import useStyle from "../styles";
 import Text from '../components/Text'
 import Heading from '../components/Heading'
+import GhostButton from '../components/GhostButton'
 import GradientPageBase from "../components/GradientPageBase";
 import InputSearch from "../components/InputSearch";
 import RepertoryGroupsStore from "../services/store/RepertoryGroupsStore";
 import FeaterIcon from 'react-native-vector-icons/Feather'
+import useLang from "../utils/useLang";
 
 
 export default function ({route}) {
@@ -33,10 +35,12 @@ export default function ({route}) {
     const [formSize, setFormSize] = useState({})
     const [group, setGroup] = useState({})
     const [addGroupSongsId, setAddGroupSongsId] = useState()
+    const [groupsToOrder, setGroupsToOrder] = useState([])
 
     const isFocused = useIsFocused()
     const navigation = useNavigation()
     const styles = useStyle()
+    const lang = useLang()
 
     const {height} = useWindowDimensions()
 
@@ -96,18 +100,28 @@ export default function ({route}) {
      */
     function renderDraggableItem({ item, drag, isActive }) {
         return (
-            <Box my={1} p={1} rounded={5} bg={isActive ? styles.bgLight2 : null}>
-                <HStack >
-                    <Pressable
-                        p={2} mr={2} _pressed={{opacity: .7}}
-                        onLongPress={drag}
-                    >
-                        <HamburgerIcon/>
-                    </Pressable>
-                    <VStack>
+            <Box my={1} p={1} rounded='xl' bg={isActive ? styles.bgDark : null}>
+                <HStack justifyContent='space-between' alignItems='center'>
+                    <VStack pl={4}>
                         <Heading fontSize='sm'>{item.name}</Heading>
                         <Text>{item.artist}</Text>
                     </VStack>
+                    <HStack alignItems='center' space={5}>
+                        {
+                            !!item.cipher ? 
+                            <Pressable onPress={() => navigation.navigate('CipherView', {id: item.id})} _pressed={{opacity: .7}}>
+                                <Icon color={styles.fontColor} size={20} name='playlist-music-outline'/> 
+                            </Pressable>
+                            : null
+                        }
+
+                        <Pressable
+                            p={2} mr={2} _pressed={{opacity: .7}}
+                            onLongPress={drag}
+                        >
+                            <HamburgerIcon/>
+                        </Pressable>
+                    </HStack>
                 </HStack>
             </Box>
         );
@@ -119,7 +133,7 @@ export default function ({route}) {
     async function saveGroupHandle() {
 
         if (!group.name) {
-            Toast.show({title: 'Insira um nome para o grupo'})
+            Toast.show({title: lang('Enter a name for the group')})
             return
         }
         setLoading(true)
@@ -171,12 +185,12 @@ export default function ({route}) {
      */
     function deleteGroupHandle(id) {
         Alert.alert(
-            'Deletar este grupo?', 
-            'As músicas deste grupo também serão desvinculadas do repertório',
+            lang('Delete this group?'), 
+            lang('The songs from this group will also be unlinked from the repertoire'),
             [
-                {text: 'não'},
+                {text: lang('No')},
                 {
-                    text: 'sim', 
+                    text: lang('Yes'), 
                     onPress: async () => {
                         await RepertoryGroupsStore.detachAllSongs(id)
                         await RepertoryGroupsStore.delete(id)
@@ -224,25 +238,90 @@ export default function ({route}) {
                 <Pressable
                     onPress={() => onSelectHandle(item.id, isSelected)}
                 >
-                    <HStack alignItems='center'>
-                        <Icon size={25} color={styles.primary} name={isSelected ? 'checkbox-marked-outline' : 'checkbox-blank-outline'}/>
-                        <VStack p={1} ml={3}>
-                            <Heading size='sm'>{item.name}</Heading>
-                            <Text>{item.artist}</Text>
-                        </VStack>
+                    <HStack alignItems='center' justifyContent='space-between'>
+                        <HStack alignItems='center'>
+                            <Icon size={25} color={styles.primary} name={isSelected ? 'checkbox-marked-outline' : 'checkbox-blank-outline'}/>
+                            <VStack p={1} ml={3}>
+                                <Heading size='xs'>{item.name}</Heading>
+                                <Text fontSize='xs'>{item.artist}</Text>
+                            </VStack>
+                        </HStack>
+                        {
+                            !!item.cipher ? 
+                            <Pressable onPress={() => navigation.navigate('CipherView', {id: item.id})} _pressed={{opacity: .7}}>
+                                <Icon color={styles.fontColor} size={20} name='playlist-music-outline'/> 
+                            </Pressable>
+                            : null
+                        }
                     </HStack>
                 </Pressable>
             </Box>
         )
     }
 
+    /**
+     * order group mode
+     */
+    function orderGroupModeHandle() {
+        let orderGroups = [...rep.groups]
+        setGroupsToOrder(orderGroups)
+    }
+
+    /**
+     * on drop group handle
+     */
+    async function saveGrupOrderHandle() {
+        
+        if (!groupsToOrder.length)
+            return
+
+        setLoading(true)
+
+        for (idx in groupsToOrder) {
+            
+            let gp = groupsToOrder[idx]
+
+            if (!gp)
+                continue
+
+            await RepertoryGroupsStore.updateIdx(gp.id, idx)
+        }
+
+        setGroupsToOrder([])
+        await find(rep.id)
+    }
+    
+    /**
+     * render item
+     */
+    function renderDraggableGroup({ item, drag, isActive }) {
+        return (
+            <Box my={1} p={1} rounded='xl' bg={isActive ? styles.bgDark : null}>
+                <HStack justifyContent='space-between' alignItems='center'>
+                    <Heading fontSize='sm'>{item.name}</Heading>
+                    <Pressable
+                        p={2} mr={2} _pressed={{opacity: .7}}
+                        onLongPress={drag}
+                    >
+                        <HamburgerIcon/>
+                    </Pressable>
+                </HStack>
+            </Box>
+        );
+    };  
+
     return (
         <GradientPageBase>
             <Box h='100%'>
                 <Box onLayout={(event) => {setFormSize(event.nativeEvent.layout)}}>
-                    <VStack space={3} p={4}>
-                        <Text fontSize='xs' alignSelf='center'>Adicione grupos ao repertório para vincular músicas</Text>
-                        <Button bg={styles.primary} onPress={() => setModalGroup(true)}>ADICIONAR GRUPO</Button>
+                    <VStack space={1} px={4}>
+                        <Text fontSize='xs' alignSelf='center'>Add groups to repertoire to link songs</Text>
+                        <Button mt={2} bg={styles.primary} onPress={() => setModalGroup(true)}>ADD GROUP</Button>
+                        {
+                            rep.groups && rep.groups.length > 1 ?
+                            <GhostButton onPress={orderGroupModeHandle}>Change groups order</GhostButton>
+                            : null
+                        }
                     </VStack>
                 </Box>
                 <Box>
@@ -250,7 +329,7 @@ export default function ({route}) {
                     {
                         rep.groups ? rep.groups.map((g, i) => (
                             <Box p={2} key={i}>
-                                <Box bg={styles.bgLight2} rounded='lg' p={2}>
+                                <Box bg={styles.bgDark} rounded='lg' p={2}>
                                     <HStack justifyContent='space-between' alignItems='center'>
                                         <Heading size='sm'>{g.name}</Heading>
                                         <Menu
@@ -261,15 +340,15 @@ export default function ({route}) {
                                                 </Pressable>
                                             )}
                                         >
-                                            <Menu.Item onPress={() => setAddGroupSongsId(g.id)}>Add músicas</Menu.Item>
+                                            <Menu.Item onPress={() => setAddGroupSongsId(g.id)}>{lang('Link songs')}</Menu.Item>
                                             <Menu.Item onPress={() => {
                                                     setGroup({...g})
                                                     setModalGroup(true)
                                                 }}
                                             >
-                                                Editar
+                                                {lang('Edit')}
                                             </Menu.Item>
-                                            <Menu.Item _text={{color: styles.danger}} onPress={() => deleteGroupHandle(g.id)}>Excluir</Menu.Item>
+                                            <Menu.Item _text={{color: styles.danger}} onPress={() => deleteGroupHandle(g.id)}>{lang('Delete')}</Menu.Item>
                                         </Menu>
                                     </HStack>
                                 </Box>
@@ -290,70 +369,92 @@ export default function ({route}) {
                 {/**
                  * add songs to group
                  */}
-                <Modal isOpen={!!addGroupSongsId} onClose={() => setAddGroupSongsId(null)} size='full' >
-                    <Modal.Content bg={styles.bgDark}>
-                        <Modal.Header bg={styles.bgDark} _text={{color: styles.fontColor}}>
-                            Adicionar Músicas
+                <Modal isOpen={!!addGroupSongsId} onClose={() => setAddGroupSongsId(null)} size='full'>
+                    <Modal.Content bg={styles.bg}>
+                        <Modal.Header bg={styles.bg} _text={{color: styles.fontColor}}>
+                        
                             <Modal.CloseButton/>
+                            <Box>
+                                <VStack>
+                                    <Heading fontSize="md">{lang('Link songs')}</Heading>
+                                    <Box mt={2}>
+                                        <InputSearch
+                                            value={songSearch} onChangeText={setSongSearch}
+                                            onClean={() => setSongSearch(null)}
+                                        />
+                                        <Text>{lang('Selected')}: ({selectedSongIds.length})</Text>
+                                    </Box>
+                                </VStack>
+                            </Box>
                         </Modal.Header>
                         <Modal.Body>
 
                             <Box flex={1}>
-                                <Box>
-                                    <VStack>
-                                        <HStack justifyContent='space-between'>
-                                            <Heading fontSize="lg">Músicas</Heading>
-                                            <Text>Selecionados: ({selectedSongIds.length})</Text>
-                                        </HStack>
-                                        <Box>
-                                            <InputSearch
-                                                value={songSearch} onChangeText={setSongSearch}
-                                                onClean={() => setSongSearch(null)}
-                                            />
-                                        </Box>
-                                    </VStack>
+                                
+                                <Box >
+                                    <FlatList
+                                        w='100%'
+                                        keyboardShouldPersistTaps='handled'
+                                        keyExtractor={(_,i) => i}
+                                        data={getFilteredSongs()}
+                                        renderItem={renderSelectableSong}
+                                    />
                                 </Box>
-                                <Box pb={100}>
-                                    {/* <Checkbox.Group
-                                        onChange={setSelectedSongIds} 
-                                        value={selectedSongIds}
-                                        colorScheme='green' 
-                                    > */}
-                                        <FlatList
-                                            w='100%'
-                                            keyboardShouldPersistTaps='handled'
-                                            keyExtractor={(_,i) => i}
-                                            data={getFilteredSongs()}
-                                            renderItem={renderSelectableSong}
-                                        />
-                                        {/* {
-                                            getFilteredSongs().map((item, i) => (
-                                                <Checkbox value={item.id} ml={3} key={i}>
-                                                    <VStack p={1}>
-                                                        <Heading size='sm'>{item.name}</Heading>
-                                                        <Text>{item.artist}</Text>
-                                                    </VStack>
-                                                </Checkbox>
-                                            ))
-                                        } */}
-                                    {/* </Checkbox.Group> */}
-                                </Box>
-                                <Button onPress={attachSongsHandle}>SALVAR</Button>
                             </Box>
+                        </Modal.Body>
+                        <Modal.Footer bg={styles.bg} >
+                            <Box flex={1}>
+                                <Button onPress={attachSongsHandle}>SAVE</Button>
+                            </Box>
+                        </Modal.Footer>
+                    </Modal.Content>
+                </Modal>
+
+                <Modal 
+                    isOpen={modalGroup} 
+                    onClose={() => {
+                        setModalGroup(false)
+                        setGroup({})
+                    }}
+                >
+                    <Modal.Content bg={styles.bg}>
+                        <Modal.Header bg={styles.bg} _text={{color: styles.fontColor}}>
+                            {lang('Group')}
+                            <Modal.CloseButton/>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <Input 
+                                label='Nome' 
+                                placeholder='Ex: Opening , Bis' 
+                                value={group.name} onChangeText={v => setGroup({...group, name: v})}
+                                onSubmitEditing={saveGroupHandle}
+                            />
+                            <Button mt={3} onPress={saveGroupHandle}>SAVE</Button>
                         </Modal.Body>
                     </Modal.Content>
                 </Modal>
 
-                <Modal isOpen={modalGroup} onClose={() => setModalGroup(false)}>
-                    <Modal.Content bg={styles.bgDark}>
-                        <Modal.Header bg={styles.bgDark} _text={{color: styles.fontColor}}>
-                            Grupo
+                <Modal isOpen={!!groupsToOrder.length} onClose={() => setGroupsToOrder([])}>
+                    <Modal.Content bg={styles.bg}>
+                        <Modal.Header bg={styles.bg} _text={{color: styles.fontColor}}>
+                            {lang('Groups')}
                             <Modal.CloseButton/>
                         </Modal.Header>
                         <Modal.Body>
-                            <Input label='Nome' placeholder='Ex: Abertura, Bis' value={group.name} onChangeText={v => setGroup({...group, name: v})}/>
-                            <Button mt={3} onPress={saveGroupHandle}>SALVAR</Button>
+                            <GestureHandlerRootView>
+                                <DraggableFlatList
+                                    data={groupsToOrder}
+                                    onDragEnd={({ data }) => setGroupsToOrder([...data])}
+                                    keyExtractor={(_, i) => i+1}
+                                    renderItem={renderDraggableGroup}
+                                /> 
+                            </GestureHandlerRootView>
                         </Modal.Body>
+                        <Modal.Footer bg={styles.bg} >
+                            <Box flex={1}>
+                                <Button onPress={saveGrupOrderHandle}>SAVE</Button>
+                            </Box>
+                        </Modal.Footer>
                     </Modal.Content>
                 </Modal>
             </Box>

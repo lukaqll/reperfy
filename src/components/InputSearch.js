@@ -3,12 +3,13 @@ import Input from './Input'
 import React from "react";
 import useStyle from "../styles";
 
-export default function (props) {
+const InputSearch = function (props, ref) {
 
     const styles = useStyle()
 
     return (
         <Input
+            ref={ref}
             py={1}
             rightElement={
                 <Box>
@@ -23,7 +24,11 @@ export default function (props) {
                 </Box>
             }
             placeholder='Buscar'
+            returnKeyType='search'
+            onSubmitEditing={props?.onSearch}
             {...props}
         />
     )
 }
+
+export default React.forwardRef(InputSearch)

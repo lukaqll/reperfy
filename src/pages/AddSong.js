@@ -1,4 +1,4 @@
-import { Box, ChevronDownIcon, ChevronUpIcon, FlatList, FormControl, Pressable, Text, Toast, VStack } from "native-base";
+import { Box, ChevronDownIcon, ChevronUpIcon, FlatList, FormControl, Pressable, SearchIcon, Toast, VStack } from "native-base";
 import React, { useEffect, useRef, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -8,6 +8,8 @@ import Button from "../components/Button";
 import Input from "../components/Input";
 import useStyle from "../styles";
 import GradientPageBase from "../components/GradientPageBase";
+import Text from "../components/Text";
+import useLang from "../utils/useLang";
 export default function ({route}) {
 
     const [song, setSong] = useState({})
@@ -20,12 +22,15 @@ export default function ({route}) {
 
     const isFocused = useIsFocused()
     const navigation = useNavigation()
-    const artistInputRef = useRef()
     const styles = useStyle()
+    const lang = useLang()
 
     useEffect(() => {
         if (route.params && (id = route.params.id)) {
             find(id)
+            navigation.setOptions({
+                title: lang('Edit song')
+            })
         }
         getAllArtists('')
     }, [isFocused])
@@ -48,7 +53,7 @@ export default function ({route}) {
     async function save() {
 
         if (!song.name) {
-            Toast.show({description: 'Insira um nome'})
+            Toast.show({description: lang('Enter a name')})
             return
         }
         if (!song.id) {
@@ -78,15 +83,17 @@ export default function ({route}) {
                 <Box>
                     <Box>
                         <Input
-                            label='Nome'
+                            label='Name'
                             value={song.name}
                             onChangeText={v => setSong({...song, name: v})}
                             onFocus={() => setAutocompleteOpen(false)}
+                            rightElement={<SearchIcon onPress={() => setModalAddCipher(true)} size={21} color={styles.fontColor} mr={5}/>}
+                            returnKeyType='search'
+                            onSubmitEditing={() => setModalAddCipher(true)}
                         />
                         <Box>
                             <Input
-                                label='Artista'
-                                ref={artistInputRef}
+                                label='Artist'
                                 value={song.artist}
                                 onChangeText={v => setSong({...song, artist: v})}
                                 onFocus={() => setAutocompleteOpen(true)}
@@ -100,12 +107,12 @@ export default function ({route}) {
                             <Box>
                                 {
                                     autocompleteOpen && artistFiltered.length ? 
-                                    <Box shadow={5} rounded='lg' bg='#fff' p={2} maxH={200}>
+                                    <Box shadow={5} rounded='lg' bg={styles.bgDark} p={2} maxH={200}>
                                         <FlatList
                                             data={artistFiltered}
                                             keyExtractor={(_, i) => i}
                                             renderItem={({item}) => (
-                                                <Pressable mb={2} onPress={() => {
+                                                <Pressable mb={2} _pressed={{opacity: .7}} onPress={() => {
                                                     setSong({...song, artist: item.artist})
                                                     setAutocompleteOpen(false)
                                                 }}>
@@ -120,11 +127,17 @@ export default function ({route}) {
                         </Box>
                     </Box>
                     <VStack space={3} mt={10}>
-                        <Button bg={styles.primary} onPress={save}>SALVAR</Button>
-                        <Button bg={styles.warning} onPress={() => setModalAddCipher(true)}>BUSCAR CIFRA</Button>
+                        <Button bg={styles.primary} onPress={save}>SAVE</Button>
                         {
                             song.cipher ?
-                            <Button bg={styles.warning} onPress={editCipherHandle}>EDITAR CIFRA</Button> : null
+                            <Button 
+                                variant='ghost'
+                                bg={null} 
+                                shadow={null} 
+                                _text={{color: styles.fontColor}} 
+                                _pressed={{backgrounCOlor: null}}
+                                onPress={editCipherHandle}
+                            >EDIT CIPHER</Button> : null
                         }
                     </VStack>
                 </Box>
@@ -137,9 +150,8 @@ export default function ({route}) {
                         setSelectedSong(selected)
 
                         let newSong = {...song}
-                        if (!newSong.name) {
-                            newSong.name = selected.TITULO
-                        }
+                        newSong.name = selected.TITULO
+
                         if (!newSong.artist) {
                             newSong.artist = selected.ARTISTA
                         }

@@ -1,5 +1,5 @@
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { Box, CloseIcon, FlatList, HamburgerIcon, HStack, Input, Menu, SearchIcon, Pressable, VStack, Button, Fab } from "native-base";
+import { Box, CloseIcon, FlatList, HamburgerIcon, HStack, Input, Menu, SearchIcon, Pressable, VStack, Button, Fab, IconButton } from "native-base";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import Icon from 'react-native-vector-icons/FontAwesome5'
@@ -14,12 +14,15 @@ import Text from '../components/Text'
 import Heading from '../components/Heading'
 import InputSearch from "../components/InputSearch";
 import GradientPageBase from "../components/GradientPageBase";
+import useLang from "../utils/useLang";
+import EmptySongs from "../components/Empty/EmptySongs";
 
 export default function () {
 
     const navigation = useNavigation()
     const isFocused = useIsFocused()
     const styles = useStyle()
+    const lang = useLang()
 
     const [songs, setSongs] = useState([])
     const [songSearch, setSongSearch] = useState('')
@@ -39,9 +42,9 @@ export default function () {
     }
 
     async function deleteSong(id) {
-        Alert.alert('Deseja deletar esta música?', 'Esta ação não poderá ser desfeita', [
-            {text: 'não'},
-            {text: 'sim', onPress: async () => {
+        Alert.alert(lang('Delete this song?'), lang('This action cannot be undone'), [
+            {text: lang('No')},
+            {text: lang('Yes'), onPress: async () => {
                 await SongStore.delete(id)
                 await getAllSongs()
             }},
@@ -60,19 +63,21 @@ export default function () {
 
                         {
                             !!item.cipher ? 
-                            <MaterialIcon color={styles.fontColor} onPress={() => navigation.navigate('CipherView', {id: item.id})} size={25} name='playlist-music-outline'/> 
+                            <Pressable onPress={() => navigation.navigate('CipherView', {id: item.id})} _pressed={{opacity: .7}}>
+                                <MaterialIcon color={styles.fontColor}  size={25} name='playlist-music-outline'/> 
+                            </Pressable>
                             : null
                         }
                         <Menu
                             placement="left"
                             trigger={props => (
-                                <Button {...props} alignItems='center' variant='ghost' size='xs'>
+                                <Pressable {...props} _pressed={{opacity: .7}} px={2}>
                                     <FeaterIcon name='more-vertical' size={20} color={styles.fontColor}/>
-                                </Button>
+                                </Pressable>
                             )}
                         >
-                            <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>Editar</Menu.Item>
-                            <Menu.Item onPress={() => deleteSong(item.id)} _text={{color: '#f00'}}>Deletar</Menu.Item>
+                            <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>{lang('Edit')}</Menu.Item>
+                            <Menu.Item onPress={() => deleteSong(item.id)} _text={{color: '#f00'}}>{lang('Delete')}</Menu.Item>
                         </Menu>
                     </HStack>
                 </Box>
@@ -89,42 +94,45 @@ export default function () {
     };
 
     return (
-        <GradientPageBase>
-            <Box p={4} h='100%'>
+        <GradientPageBase >
+            <Box p={3} h='100%' pb={0}>
                 <Box mb={3}>
                     <InputSearch
                         value={songSearch} onChangeText={setSongSearch}
                         onClean={() => setSongSearch(null)}
                     />
                 </Box>
-                <Box flex={1}>
-                    {
-                        !loading ?
-                        <AlphabetList
-                            data={songs.filter(i => (
-                                    !songSearch
-                                    || i.name?.toLowerCase().includes(songSearch.toLowerCase()) 
-                                    || i.artist?.toLowerCase().includes(songSearch.toLowerCase()))
-                                ).map(s => ({...s, value: s.name || '', key: s.id}))
-                            }
-                            renderItem={renderSongItem}
-                            renderSectionHeader={renderSectionHeader}
-                            indexLetterSize={15}
-                            indexLetterColor='#ff3030'
-                            letterItemStyle={{height: 25}}
-                            letterIndexWidth={0}
-                            alphabetContainer={{
-                                alignSelf: "flex-start",
-                            }}
-                        /> : null
-                    }
-                </Box>
-                <Fab
-                    icon={<Icon name='plus' color='#fff' size={15}/>}
-                    bg={styles.success} onPress={() => navigation.navigate('AddSong')}
-                    renderInPortal={false} shadow={2} size="sm"
-                />
-                
+                <Box flex={1}  h='100%'>
+                    <Box>
+                        {
+                            !!songs.length && !loading ?
+                            <AlphabetList
+                                data={songs.filter(i => (
+                                        !songSearch
+                                        || i.name?.toLowerCase().includes(songSearch.toLowerCase()) 
+                                        || i.artist?.toLowerCase().includes(songSearch.toLowerCase()))
+                                    ).map(s => ({...s, value: s.name || '', key: s.id}))
+                                }
+                                renderItem={renderSongItem}
+                                renderSectionHeader={renderSectionHeader}
+                                indexLetterSize={15}
+                                indexLetterColor='#ff3030'
+                                letterItemStyle={{height: 25}}
+                                letterIndexWidth={0}
+                                alphabetContainer={{
+                                    alignSelf: "flex-start",
+                                }}
+                            /> : null
+                        }
+                        {
+                            !songs.length && !loading ?
+                            <Box h='100%' justifyContent='center'>
+                                <EmptySongs/>
+                            </Box>
+                            : null
+                        }
+                    </Box>
+                </Box>   
             </Box>
         </GradientPageBase>
     )

@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { Box, CheckIcon, HStack, Pressable, ScrollView, Switch, VStack } from "native-base";
+import { Box, CheckIcon, HStack, Pressable, ScrollView, Select, Switch, VStack } from "native-base";
 import GradientPageBase from "../components/GradientPageBase";
 import Text from "../components/Text";
 import Heading from "../components/Heading";
 import useStyle from "../styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { switchMode } from "../services/redux/actions";
+import { switchLang, switchMode } from "../services/redux/actions";
 import { useSelector, useDispatch } from "react-redux";
+import useLang from "../utils/useLang";
 
-export default function ({navigation}) {
+export default function () {
 
     const styles = useStyle()
-    const theme = useSelector(state => state.theme)
+    const lang = useLang()
+
+    const selector = useSelector(state => state.theme)
     const dispatch = useDispatch()
     const isFocused = useIsFocused()
 
@@ -20,10 +23,10 @@ export default function ({navigation}) {
 
     useEffect(() => {
         getChordColor()
-    }, [isFocused])
+    }, [isFocused, selector])
 
     function handleThemeChange() { 
-        const mode = theme.mode == 'light' ? 'dark' : 'light'
+        const mode = selector.mode == 'light' ? 'dark' : 'light'
         dispatch(switchMode(mode));
         AsyncStorage.setItem('theme', mode).then()
     }
@@ -37,6 +40,11 @@ export default function ({navigation}) {
         let color = await AsyncStorage.getItem('chord_color')
         setChordColor(color)
 
+    }
+
+    function handleLangChange(lang) {
+        dispatch(switchLang(lang));
+        AsyncStorage.setItem('lang', lang).then()
     }
 
     const chordColors = [styles.primaryDark, '#fa1e3c', '#20a19d', '#f44926', '#846dbe', '#444']
@@ -53,13 +61,13 @@ export default function ({navigation}) {
                                 size='lg'
                                 onTrackColor={styles.primary}
                                 onChange={handleThemeChange}
-                                isChecked={theme.mode == 'dark'}
+                                isChecked={selector.mode == 'dark'}
                             />
                         </HStack>
                     </Box>
 
                     <Box mt={3}>
-                        <Heading size='sm'>Cor dos acordes</Heading>
+                        <Heading size='sm'>{lang('Chord color')}</Heading>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                             <HStack space={3} my={3}>
                                 {
@@ -82,6 +90,20 @@ export default function ({navigation}) {
                             </HStack>
                         </ScrollView>
 
+                    </Box>
+
+                    <Box mt={3}>
+                        <Heading size='sm'>Lang</Heading>
+                        <Select 
+                            mt={3}
+                            selectedValue={selector.lang}
+                            color={styles.fontColor}
+                            rounded='full'
+                            onValueChange={handleLangChange}
+                        >
+                            <Select.Item value='en-us' label={lang('English')}/>
+                            <Select.Item value='pt-br' label={lang('Portuguese')}/>
+                        </Select>
                     </Box>
                 </VStack>
             </Box>

@@ -1,31 +1,31 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { ChevronLeftIcon, IconButton, Text } from "native-base";
+import React from "react";
+import CutomHeaderBackButtom from "../components/CustomHeaderBackButtom";
 import AddRepertory from "../pages/AddRepertory";
 import AddRepertorySongs from "../pages/AddRepertorySongs";
 import AddSong from "../pages/AddSong";
 import CipherView from "../pages/CipherView";
-import Home from "../pages/Home"
-import Repertoires from "../pages/Repertoires";
 import RepertoryView from "../pages/RepertoryView";
-import Songs from "../pages/Songs";
-import { switchMode } from "../services/redux/actions";
 import useStyle from "../styles";
+import useLang from "../utils/useLang";
 import DrawerRoute from "./drawer.route";
+import TabsRoute from "./tabs.route";
 
 const Stack = createNativeStackNavigator()
 
 
-const IndexRoute = function () {
+const IndexRoute = function (props) {
     
     const styles = useStyle()
+    const lang = useLang()
+    // let navigation = useNavigation()
 
     return (
         <NavigationContainer>
             <Stack.Navigator
-                initialRouteName="Repertoires"
+                initialRouteName="TabsRoute"
                 screenOptions={{
                     headerTransparent: true,
                     headerTintColor: styles.fontColor,
@@ -35,12 +35,24 @@ const IndexRoute = function () {
                     contentStyle: {
                         backgroundColor: styles.bgLight
                     },
-                    animation: 'slide_from_right'
+                    animation: 'slide_from_right',
+                    headerLeft: (props) => <CutomHeaderBackButtom {...props}/>
                 }}
             >
-                <Stack.Screen
+                {/* <Stack.Screen
                     name='Drawer'
                     component={DrawerRoute}
+                    options={{
+                        headerShown: false,
+                        contentStyle: {
+                            paddingTop: 0
+                        }
+                    }}
+                /> */}
+
+                <Stack.Screen
+                    name='TabsRoute'
+                    component={TabsRoute}
                     options={{
                         headerShown: false,
                         contentStyle: {
@@ -50,33 +62,26 @@ const IndexRoute = function () {
                 />
                 
                 <Stack.Screen
-                    name='Home'
-                    component={Home}
-                    options={{ title: 'Início' }}
-
-                />
-
-                <Stack.Screen
                     name='AddSong'
                     component={AddSong}
-                    options={{title: 'Nova Música'}}
+                    options={{title: lang('New Song')}}
                 />
 
                 <Stack.Screen
                     name='AddRepertory'
                     component={AddRepertory}
-                    options={{title: 'Novo Repertório'}}
+                    options={{title: lang('New Repertoire')}}
                 />
                 <Stack.Screen
                     name='AddRepertorySongs'
                     component={AddRepertorySongs}
-                    options={{title: 'Editar Repertório'}}
+                    options={{title: ''}}
                 />
                 
                 <Stack.Screen
                     name='CipherView'
                     component={CipherView}
-                    options={{title: '', contentStyle: {backgroundColor: styles.bgDark}}}
+                    options={{title: '', contentStyle: {backgroundColor: styles.bg}}}
                 />
 
                 <Stack.Screen

@@ -35,6 +35,15 @@ class RepertoryStore{
         `, [params.name, params.id]);
     }
 
+    async updateIdx(id, idx) {
+        return await Database.executeSql(`
+            UPDATE repertory_groups
+            SET 
+                idx = ?
+            WHERE id = ?;
+        `, [idx, id]);
+    }
+
     async attachSongs(groupId, songsId = []) {
         if (!songsId)
             return 
@@ -59,6 +68,7 @@ class RepertoryStore{
             SELECT 
                 g.id as group_id,
                 g.name as group_name,
+                g.idx as group_idx,
                 rs.idx, 
                 rs.played,
                 s.* 
@@ -66,7 +76,7 @@ class RepertoryStore{
             LEFT JOIN repertory_songs rs ON rs.group_id = g.id
             LEFT JOIN songs s ON s.id = rs.song_id
             WHERE g.repertory_id = ?
-            ORDER BY g.id, rs.idx;
+            ORDER BY g.idx, rs.idx;
         `, [idRep]);
 
         let out = []
@@ -130,7 +140,8 @@ class RepertoryStore{
                 artist:   g.artist,
                 cipher:   g.cipher,
                 group_id: g.group_id,
-                played:   g.played
+                played:   g.played,
+                idx:      g.idx,
             }
 
             let groupedIndex = grouped.findIndex(gp => gp.id == g.group_id)
@@ -141,6 +152,7 @@ class RepertoryStore{
                 grouped.push({
                     id: g.group_id,
                     name: g.group_name,
+                    idx: g.group_idx,
                     songs: song.id ? [song] : []
                 })
             }

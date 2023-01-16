@@ -11,8 +11,11 @@ export default function () {
 
     return (
         <IconButton 
-            onPress={navigation.toggleDrawer} rounded='full' _pressed={{backgroundColor: styles.primary+'11'}}
-            icon={<HamburgerIcon color={styles.primary} size={25}/>}
+            onPress={navigation.toggleDrawer} 
+            rounded='full' 
+            _pressed={{backgroundColor: styles.primary+'11'}}
+            ml={1}
+            icon={<HamburgerIcon color={styles.primary} size={21}/>}
         />
     )
 }

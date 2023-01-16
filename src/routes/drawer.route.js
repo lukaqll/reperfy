@@ -10,11 +10,15 @@ import Songs from "../pages/Songs";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Octicons from "react-native-vector-icons/Octicons";
 import Configs from "../pages/Configs";
+import SongSearch from "../pages/SongSearch";
+import useLang from "../utils/useLang";
+import PlusHeaderIcon from "../components/PlusHeaderIcon";
 
 const Drawer = createDrawerNavigator();
-export default function () {
+export default function ({navigation}) {
 
     const styles = useStyle()
+    const lang = useLang()
 
     return (
         <Drawer.Navigator 
@@ -31,7 +35,7 @@ export default function () {
                 },
                 headerLeft: () => <DrawerCutomHeaderButtom/>,
                 drawerStyle: {
-                    backgroundColor: styles.bgDark
+                    backgroundColor: styles.bg
                 },
                 drawerActiveTintColor: styles.primary,
                 drawerInactiveTintColor: styles.fontColor
@@ -41,17 +45,33 @@ export default function () {
             <Drawer.Screen
                 name='Repertoires'
                 component={Repertoires}
-                options={{title: 'Repertórios', drawerIcon: (props) => <Icon name='playlist-play' {...props} />}}
+                options={{
+                    title: lang('Repertoires'), 
+                    drawerIcon: (props) => <Icon name='playlist-play' {...props} />,
+                    headerRight: () => <PlusHeaderIcon onPress={() => navigation.navigate('AddRepertory')}/>
+            }}
             />
             <Drawer.Screen
                 name='Songs'
                 component={Songs}
-                options={{title: 'Músicas', drawerIcon: (props) => <Icon name='folder-music-outline' {...props}/>}}
+                options={{
+                    title: lang('Songs'), 
+                    drawerIcon: (props) => <Icon name='folder-music-outline' {...props}/>,
+                    headerRight: () => <PlusHeaderIcon onPress={() => navigation.navigate('AddSong')}/>
+                }}
+            />
+            <Drawer.Screen
+                name='SongSearch'
+                component={SongSearch}
+                options={{
+                    title: lang('Web Search'), 
+                    drawerIcon: (props) => <Octicons name='search' {...props}/>
+                }}
             />
             <Drawer.Screen
                 name='Configs'
                 component={Configs}
-                options={{title: 'Configurações', drawerIcon: (props) => <Octicons name='gear' {...props}/>}}
+                options={{title: lang('Settings'), drawerIcon: (props) => <Octicons name='gear' {...props}/>}}
             />
         </Drawer.Navigator>
     )

@@ -12,8 +12,16 @@ class CifrasRepo {
         return await this.instance.get(`/api/search?q=${songName}`)
     }
 
-    async findSong(codName = '', codArtist = '') {
-        return await this.instance.get(`/cifra/${codArtist}/${codName}`)
+    async findSong(song = {}) {
+        let codArtist = song.COD_ARTISTA
+        let codName = song.COD_TITULO
+
+        let type = 'cifra'
+
+        if (song.INSTRUMENTOS && song.INSTRUMENTOS[0].SLUG != type) {
+            type = song.INSTRUMENTOS[0].SLUG
+        }
+        return await this.instance.get(`/${type}/${codArtist}/${codName}`)
     }
 }
 

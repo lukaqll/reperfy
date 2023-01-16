@@ -56,7 +56,7 @@ class RepertoryStore{
 
     async deleteBySong(idSong) {
         return await Database.executeSql(`
-            DELETE FROM  repertory_songs 
+            DELETE FROM repertory_songs 
             WHERE song_id = ?
         `, [idSong])
     }
@@ -124,6 +124,14 @@ class RepertoryStore{
             out.push(result.rows.item(i))
         }
         return out
+    }
+
+    async find(songId, groupId) {
+        const result = await Database.executeSql(`
+            SELECT * FROM repertory_songs WHERE song_id = ? AND group_id = ? LIMIT 1;
+        `, [songId, groupId]);
+
+        return result.rows.item(0)
     }
 }
 

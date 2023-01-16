@@ -1,15 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "native-base";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { LogBox } from "react-native";
 import { useDispatch } from "react-redux";
+import SplashLoader from "./components/SplashLoader";
 import IndexRoute from "./routes/index.route";
-import { switchMode } from "./services/redux/actions";
+import { switchLang, switchMode } from "./services/redux/actions";
 import Database from "./services/store/Database";
 import useStyle from "./styles";
 
 
 export default function () {
+
+    const [loaded, setLoaded] = useState(false)
 
     useEffect(() => {
         Database.setUpDatabase()
@@ -20,12 +23,13 @@ export default function () {
         ]);
     }, [])
 
-    function updateTheme() {
-        AsyncStorage.getItem('theme').then(mode => {
-            if (mode) {
-                dispatch(switchMode(mode));
-            }
-        })
+    async function updateTheme() {
+        const mode = await AsyncStorage.getItem('theme')
+        const lang = await AsyncStorage.getItem('lang')
+        dispatch(switchMode(mode));
+        dispatch(switchLang(lang));
+
+        setLoaded(true)
     }
     
     const styles = useStyle()
@@ -34,10 +38,15 @@ export default function () {
     return (
         <>
             <StatusBar
-                barStyle='light-content'
-                backgroundColor={styles.primary}
+                barStyle={styles.mode == 'dark' ? 'light-content' : 'dark-content'}
+                backgroundColor={styles.bg}
             />
-            <IndexRoute/>
+            {
+                loaded ? 
+                <IndexRoute/>
+                :
+                <SplashLoader/>
+            }
         </>
     )
 }

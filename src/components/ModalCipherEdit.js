@@ -6,10 +6,14 @@ import { useNavigation } from "@react-navigation/native";
 import { actions, RichEditor, RichToolbar } from "react-native-pell-rich-editor";
 import useStyle from "../styles";
 import HTMLCipher from "./HTMLCipher";
+import cipherToneUpdate from "../utils/cipherToneUpdate";
+import useLang from "../utils/useLang";
 
 export default function (props) {
 
     const styles = useStyle()
+    const lang = useLang()
+    
     const navigation = useNavigation()
     const {width, height} = useWindowDimensions()
     const richText = useRef()
@@ -17,8 +21,7 @@ export default function (props) {
     const [cifraHTML, setCifraHTML] = useState(null)
     const [editMode, setEditMode] = useState(false)
 
-    const scaleSus = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-    const scaleBem = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+    
 
     useEffect(() => {
 
@@ -33,56 +36,7 @@ export default function (props) {
     }
 
     function change(to = 1) {
-
-        const regex = /<\s*span data-chord.*?>(.*?)<\s*\/\s*span>/gm
-        let strHtml = cifraHTML
-        let newTags = []
-        while ((match = regex.exec(strHtml)) != null) {
-
-            let tag     = match[0]
-            let chord   = match[1]
-
-            let chordTones = chord.match(/[A-G](#|b)|[A-G]/gm)
-            if (!chordTones) 
-                continue
-
-            let newChord = chord
-            
-            for (let chordTone of chordTones) {
-
-                let scale = scaleSus
-                if (chordTone.match(/.*?b/g))
-                    scale = scaleBem
-
-                let index = scale.indexOf(chordTone)
-
-                index += (1*to)
-
-                if (index < 0)
-                   index = scale.length-1
-
-                if (index >= scale.length)
-                    index = 0
-
-                let newChordTone = scale[index]
-                let regexReplace = new RegExp(`${chordTone}`, 'g');
-                newChord = newChord.replace(regexReplace, newChordTone)
-            }
-
-            let newTag = tag.replace(/>(.*?)<\//gm, `>${newChord}</`)
-            newTags.push({tag, newTag})
-        }
-
-        // replace chord tags
-        let replacedTags = []
-        for (tag of newTags) {
-
-            if (!replacedTags.includes(tag.tag)) {
-                strHtml = strHtml.replaceAll(tag.tag, tag.newTag)
-                replacedTags.push(tag.tag)
-            }
-        }
-
+        let strHtml = cipherToneUpdate(cifraHTML, to)
         setCifraHTML(strHtml)
     }
 
@@ -92,17 +46,9 @@ export default function (props) {
     }
 
     function saveHandle() {
-        Alert.alert('Salvar cifra?', 'A cifra será adicionada na música', [
-            {text: 'Não'},
-            {
-                text: 'Sim',
-                onPress: () => {
-                    const song = props.song
-                    song.cipher = cifraHTML
-                    props.onSave(song)
-                }
-            }
-        ])
+        const song = props.song
+        song.cipher = cifraHTML
+        props.onSave(song)
     }
 
     return (
@@ -117,7 +63,7 @@ export default function (props) {
                     <Modal.CloseButton/>
                     <Modal.Header>
                         <VStack space={4}>
-                            <Heading size='md'>Editar cifra ({props.song.BUSCA})</Heading>
+                            <Heading size='md'>{lang('Edit cipher')} ({props.song.BUSCA})</Heading>
                             <HStack justifyContent='space-between' alignItems='center'>
                                 {
                                     editMode ? 
@@ -140,13 +86,13 @@ export default function (props) {
                                             <Button  onPress={() => change(-1)} variant='outline' size='sm'>
                                                 <HStack alignItems='center' space={2}>
                                                     <MinusIcon size='xs'/>
-                                                    <Text fontSize='xs'>½ tom</Text>
+                                                    <Text fontSize='xs'>½ {lang('tone')}</Text>
                                                 </HStack>
                                             </Button>
                                             <Button onPress={() => change()} variant='outline' size='sm' >
                                                 <HStack alignItems='center' space={2}>
                                                     <AddIcon size='xs'/>
-                                                    <Text fontSize='xs'>½ tom</Text>
+                                                    <Text fontSize='xs'>½ {lang('tone')}</Text>
                                                 </HStack>
                                             </Button>
                                         </Button.Group>
@@ -154,7 +100,7 @@ export default function (props) {
                                 }
 
                                 <Button.Group isAttached >
-                                    <Button variant='outline' _text={{color: styles.primary}} size='sm' onPress={editHandle}>{editMode ? 'Alterar tom' : 'Editar'}</Button>
+                                    <Button variant='outline' _text={{color: styles.primary}} size='sm' onPress={editHandle}>{lang(editMode ? 'Alterar tom' : 'Editar')}</Button>
                                     <Button variant='outline' _text={{color: styles.primary}} size='sm' onPress={saveHandle}>OK</Button>
                                 </Button.Group>
                             </HStack>
@@ -176,7 +122,7 @@ export default function (props) {
                                                 <HStack flexShrink={1} space={2} alignItems="center">
                                                     <AlertDialog.Icon />
                                                     <Box pl="6" flex={1}>
-                                                        Ao editar um acorde manualmente, a alteração de tom pode não se comportar corretamente
+                                                        {lang('When editing a chord manually, tone change may not behave correctly')}
                                                     </Box>
                                                 </HStack>
                                             </HStack>

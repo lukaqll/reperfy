@@ -24,9 +24,9 @@ const defColors = {
 const light = {
     ...defColors,
 
-    bgLight: '#e1e1e1',
-    bgLight2: '#f1f1f1',
-    bgDark: '#FFF',
+    bgLight: '#eee',
+    bgDark: '#ddd',
+    bg: '#f1f1f1',
     fontColor: '#2f2f2f',
 
     // input
@@ -42,8 +42,8 @@ const dark = {
     ...defColors,
 
     bgLight: '#111',
-    bgLight2: '#333',
-    bgDark: '#222',
+    bgDark: '#333',
+    bg: '#222',
     fontColor: '#DDD',
 
     // input

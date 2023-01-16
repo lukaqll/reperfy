@@ -1,8 +1,9 @@
-import { THEME_CHANGE } from './constants';
+import { LANG_CHANGE, THEME_CHANGE } from './constants';
 
-// Initially we will have a light mode
+// Initially we will have a dark mode
 const initialState = {
-    mode: 'light'
+    mode: 'dark',
+    lang: 'en-us'
 };
 
 // Handle our action of changing the theme
@@ -12,6 +13,12 @@ const themeReducer = (state = initialState, action) => {
             return {
                 ...state,
                 mode: action.payload
+            }
+        
+        case LANG_CHANGE:
+            return {
+                ...state,
+                lang: action.payload
             }
         default:
             return state;

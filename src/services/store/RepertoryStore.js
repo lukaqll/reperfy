@@ -5,7 +5,17 @@ class RepertoryStore{
 
     async getAll() {
         const result = await Database.executeSql(`
-            SELECT * FROM repertoires ORDER BY name;
+            SELECT 
+                rep.*,
+                count(rs.id) as songs_len
+            FROM 
+                repertoires rep
+            LEFT JOIN repertory_groups rg
+                ON rg.repertory_id = rep.id
+            LEFT JOIN repertory_songs rs 
+                ON rs.group_id = rg.id
+            GROUP BY rep.id
+            ORDER BY rep.name;
         `);
 
         let out = []
@@ -44,6 +54,14 @@ class RepertoryStore{
         const result = await Database.executeSql(`
             SELECT * FROM repertoires WHERE id = ? LIMIT 1;
         `, [id]);
+
+        return result.rows.item(0)
+    }
+
+    async getByName(name) {
+        const result = await Database.executeSql(`
+            SELECT * FROM repertoires WHERE name = ? LIMIT 1;
+        `, [name]);
 
         return result.rows.item(0)
     }

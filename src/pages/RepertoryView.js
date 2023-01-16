@@ -13,6 +13,7 @@ import Heading from '../components/Heading'
 import InputSearch from '../components/InputSearch'
 import GradientPageBase from "../components/GradientPageBase";
 import RepertoryGroupsStore from "../services/store/RepertoryGroupsStore";
+import useLang from "../utils/useLang";
 
 
 export default function() {
@@ -22,6 +23,7 @@ export default function() {
     const navigation = useNavigation()
     const songsRef = useRef()
     const styles = useStyle()
+    const lang = useLang()
 
     const [songs, setSongs] = useState([])
     const [loading, setLoading] = useState(false)
@@ -34,7 +36,7 @@ export default function() {
             getSongs(route.params.id)
 
             navigation.setOptions({
-                title: route.params.name || 'Repertório',
+                title: route.params.name || 'Repoertoire',
                 headerRight: renderHeaderRight
             })
         }
@@ -46,7 +48,7 @@ export default function() {
 
     useEffect(() => {
         navigation.setOptions({
-            title: route.params.name || 'Repertório',
+            title: route.params.name || 'Repoertoire',
             headerRight: renderHeaderRight
         })
     }, [onlyNotPlayed])
@@ -70,23 +72,34 @@ export default function() {
                 placement="bottom left"
                 closeOnSelect={false}
                 trigger={props => (
-                    <Button {...props} alignItems='center' variant='ghost' size='xs'>
-                        <FeaterIcon name='more-vertical' size={20} color={styles.fontColor}/>
-                    </Button>
+                    <IconButton 
+                        icon={<FeaterIcon name='more-vertical' size={20} color={styles.fontColor}/>}
+                        {...props} 
+                        alignItems='center'
+                        variant='ghost'
+                        rounded='full'
+                        _pressed={{backgroundColor: styles.primary+'11'}}
+                    />
                 )}
             >
-                <Menu.Item onPress={clearAllHandle} p={1}>
+                <Menu.Item onPress={clearAllHandle} p={1} >
                     <HStack space={2}>
                         <MaterialIcon name='broom' color='#000' size={20}/>
-                        <Text color='#000'>Desmarcar já tocadas</Text>
+                        <Text color='#000'>Uncheck already played</Text>
                     </HStack>
                 </Menu.Item>
                 <Menu.Item p={1} mt={3} onPress={() => setOnlyNotPlayed(!onlyNotPlayed)}>
                     <HStack space={2}>
                         <MaterialIcon name={onlyNotPlayed ? 'checkbox-outline' : 'checkbox-blank-outline'} color='#000' size={20}/>
-                        <Text color='#000'>Apenas não tocadas</Text>
+                        <Text color='#000'>Just unplayed</Text>
                     </HStack>
                 </Menu.Item>
+                <Menu.Item onPress={() => navigation.navigate('AddRepertory', {id: route.params.id})} p={1} mt={3}>
+                    <HStack space={2}>
+                        <MaterialIcon name='square-edit-outline' color='#000' size={20}/>
+                        <Text color='#000'>Edit</Text>
+                    </HStack>
+                </Menu.Item>                
             </Menu>
         )
     }
@@ -111,9 +124,9 @@ export default function() {
 
     function clearAllHandle() {
 
-        Alert.alert('Desmarcar as músicas já tocadas?', '', [
-            {text: 'Não'},
-            {text: 'Sim', onPress: () => {
+        Alert.alert(lang('Uncheck previously played songs?'), '', [
+            {text: lang('No')},
+            {text: lang('Yes'), onPress: () => {
                 RepertorySongsStore.unsetAllPlayed(route.params.id)
                                    .then()
                 let groups = [...songsRef.current]
@@ -137,9 +150,9 @@ export default function() {
                 _pressed={{opacity: .7}} 
                 mx={3} my={1} rounded={8} p={2}
                 shadow={4} key={i}
-                bg={styles.bgDark}
+                bg={styles.bg}
                 onLongPress={() => onPlayHandle(item)}
-                borderLeftColor={item.played ? styles.bgDark : styles.primaryDark}
+                borderLeftColor={item.played ? styles.bg : styles.primaryDark}
                 borderLeftWidth={3}
             >
                 <HStack justifyContent='space-between' alignItems='center'>
@@ -179,7 +192,7 @@ export default function() {
         return (
             <Box w='100%' key={item.id}>
                 <Pressable 
-                    p={2}
+                    p={2} rounded={5} mx={2}
                     bg={styles.bgDark}
                     onPress={() => groupToggleHande(item)}
                 >

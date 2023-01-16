@@ -30,6 +30,7 @@ class Database {
             // `DROP TABLE songs`,
             // `DROP TABLE repertoires`,
             // `DROP TABLE repertory_songs`,
+            // `DROP TABLE repertory_groups`,
 
             `CREATE TABLE IF NOT EXISTS songs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

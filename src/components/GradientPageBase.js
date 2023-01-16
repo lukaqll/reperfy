@@ -16,7 +16,7 @@ export default function (props) {
         }
     })
     return (
-        <LinearGradient colors={[styles.bgLight, styles.bgDark]} style={style.base}>
+        <LinearGradient colors={[styles.bg, styles.bg]} style={style.base}>
             {props.children}
         </LinearGradient>
     )
