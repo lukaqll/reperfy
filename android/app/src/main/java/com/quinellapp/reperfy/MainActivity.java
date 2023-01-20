@@ -1,4 +1,4 @@
-package com.repertory;
+package com.quinellapp.reperfy;
 
 import android.content.Intent;
 import com.facebook.react.ReactActivity;

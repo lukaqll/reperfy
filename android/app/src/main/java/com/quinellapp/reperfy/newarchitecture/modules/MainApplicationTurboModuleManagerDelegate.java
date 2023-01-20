@@ -1,4 +1,4 @@
-package com.repertory.newarchitecture.modules;
+package com.quinellapp.reperfy.newarchitecture.modules;
 
 import com.facebook.jni.HybridData;
 import com.facebook.react.ReactPackage;
