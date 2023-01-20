@@ -21,6 +21,11 @@ const createFile = async (fileName, content) => {
     await init()
     const filePath = `${projDir}/${fileName}`
     await RNFS.writeFile(filePath, content, 'utf8')
+    return filePath
+}
+
+const deleteFile = async (fileName) => {
+    await RNFS.unlink(fileName)
 }
 
 const init = async () => {
@@ -30,4 +35,4 @@ const init = async () => {
     }
 }
 
-export {makeDirectory, getFolderContent, getFileContent, createFile, rootDir, projDir}
+export {makeDirectory, getFolderContent, getFileContent, createFile, deleteFile, rootDir, projDir}

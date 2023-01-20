@@ -29,13 +29,13 @@ export default function ({route}) {
     const [songs, setSongs] = useState([])
     const [songSearch, setSongSearch] = useState()
     const [selectedSongIds, setSelectedSongIds] = useState([])
-    const [selectedSongs, setSelectedSongs] = useState([])
     const [loading, setLoading] = useState(false)
     const [modalGroup, setModalGroup] = useState(false)
     const [formSize, setFormSize] = useState({})
     const [group, setGroup] = useState({})
     const [addGroupSongsId, setAddGroupSongsId] = useState()
     const [groupsToOrder, setGroupsToOrder] = useState([])
+    const [scrollEnabled, setScrollEnabled] = useState(true)
 
     const isFocused = useIsFocused()
     const navigation = useNavigation()
@@ -55,7 +55,8 @@ export default function ({route}) {
 
         if (rep && rep.id) {
             navigation.setOptions({
-                title: rep.name
+                title: rep.name,
+                headerRight: () => <GhostButton onPress={() => navigation.navigate('Repertoires')} _text={{color: styles.primary}} size='lg'>OK</GhostButton>
             })
         }
     }, [rep])
@@ -175,9 +176,14 @@ export default function ({route}) {
     async function dropHandle(groupId, data) {
         setLoading(true)
         let songsId = data.map(s => s.id)
+
+        //remove duplicated
+        songsId = songsId.filter((item, index) => songsId.indexOf(item) === index);
+
         await RepertoryGroupsStore.detachAllSongs(groupId)
         await RepertoryGroupsStore.attachSongs(groupId, songsId)
         await find(rep.id)
+        setScrollEnabled(true)
     }
 
     /**
@@ -205,8 +211,8 @@ export default function ({route}) {
 
         const filteredSongs = songs.filter(i => (
             !songSearch 
-            || i.name?.toLowerCase().includes(songSearch.toLowerCase())
-            || i.artist?.toLowerCase().includes(songSearch.toLowerCase())))
+            || i.name?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(songSearch.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, ""))
+            || i.artist?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(songSearch.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, ""))))
 
         return filteredSongs
     }
@@ -311,8 +317,8 @@ export default function ({route}) {
     };  
 
     return (
-        <GradientPageBase>
-            <Box h='100%'>
+        <GradientPageBase >
+            <Box h='100%' >
                 <Box onLayout={(event) => {setFormSize(event.nativeEvent.layout)}}>
                     <VStack space={1} px={4}>
                         <Text fontSize='xs' alignSelf='center'>Add groups to repertoire to link songs</Text>
@@ -324,11 +330,11 @@ export default function ({route}) {
                         }
                     </VStack>
                 </Box>
-                <Box>
-                    <NestableScrollContainer style={{height: (height - (formSize.height || 0) - 60)}}>
+                <Box >
+                    <ScrollView style={{height: (height - (formSize.height || 0) - 70)}} scrollEnabled={scrollEnabled}>
                     {
                         rep.groups ? rep.groups.map((g, i) => (
-                            <Box p={2} key={i}>
+                            <Box p={2} key={i} >
                                 <Box bg={styles.bgDark} rounded='lg' p={2}>
                                     <HStack justifyContent='space-between' alignItems='center'>
                                         <Heading size='sm'>{g.name}</Heading>
@@ -352,10 +358,11 @@ export default function ({route}) {
                                         </Menu>
                                     </HStack>
                                 </Box>
-                                <GestureHandlerRootView>
+                                <GestureHandlerRootView >
                                     <DraggableFlatList
                                         data={g.songs}
                                         onDragEnd={({ data }) => dropHandle(g.id, data)}
+                                        onDragBegin={() => setScrollEnabled(false)}
                                         keyExtractor={(_, i) => i+1}
                                         renderItem={renderDraggableItem}
                                     /> 
@@ -363,7 +370,7 @@ export default function ({route}) {
                             </Box>
                         )) : null
                     }
-                    </NestableScrollContainer>
+                    </ScrollView>
                 </Box>
 
                 {/**
@@ -440,13 +447,17 @@ export default function ({route}) {
                             {lang('Groups')}
                             <Modal.CloseButton/>
                         </Modal.Header>
-                        <Modal.Body>
+                        <Modal.Body _scrollview={{ scrollEnabled: scrollEnabled }}>
                             <GestureHandlerRootView>
                                 <DraggableFlatList
                                     data={groupsToOrder}
-                                    onDragEnd={({ data }) => setGroupsToOrder([...data])}
+                                    onDragEnd={({ data }) => {
+                                        setGroupsToOrder([...data])
+                                        setScrollEnabled(true)
+                                    }}
                                     keyExtractor={(_, i) => i+1}
                                     renderItem={renderDraggableGroup}
+                                    onDragBegin={() => setScrollEnabled(false)}
                                 /> 
                             </GestureHandlerRootView>
                         </Modal.Body>
@@ -458,11 +469,6 @@ export default function ({route}) {
                     </Modal.Content>
                 </Modal>
             </Box>
-            <Fab
-                bg={styles.primary}
-                icon={<CheckIcon/>}
-                onPress={() => navigation.navigate('Repertoires')}
-            />
             <Loader loading={loading}/>
 
         </GradientPageBase>

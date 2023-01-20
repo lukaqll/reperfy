@@ -1,14 +1,11 @@
 import React from "react";
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import Repertoires from "../pages/Repertoires";
 import useStyle from "../styles";
-import { Text } from "native-base";
 import Songs from "../pages/Songs";
 import Fontisto from "react-native-vector-icons/Fontisto";
 import Octicons from "react-native-vector-icons/Octicons";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import Feather from "react-native-vector-icons/Feather";
 import Configs from "../pages/Configs";
 import SongSearch from "../pages/SongSearch";

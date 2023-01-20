@@ -101,6 +101,9 @@ export default function () {
                         value={songSearch} onChangeText={setSongSearch}
                         onClean={() => setSongSearch(null)}
                     />
+                    {
+                        !!songs.length ? <Text ml={3} fontSize='xs'>{songs.length} {lang('Songs')}</Text> : null
+                    }
                 </Box>
                 <Box flex={1}  h='100%'>
                     <Box>
@@ -109,8 +112,8 @@ export default function () {
                             <AlphabetList
                                 data={songs.filter(i => (
                                         !songSearch
-                                        || i.name?.toLowerCase().includes(songSearch.toLowerCase()) 
-                                        || i.artist?.toLowerCase().includes(songSearch.toLowerCase()))
+                                        || i.name?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(songSearch.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")) 
+                                        || i.artist?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(songSearch.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")))
                                     ).map(s => ({...s, value: s.name || '', key: s.id}))
                                 }
                                 renderItem={renderSongItem}

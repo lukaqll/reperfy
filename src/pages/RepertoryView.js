@@ -14,6 +14,7 @@ import InputSearch from '../components/InputSearch'
 import GradientPageBase from "../components/GradientPageBase";
 import RepertoryGroupsStore from "../services/store/RepertoryGroupsStore";
 import useLang from "../utils/useLang";
+import Banner from "../components/Ads/Banner";
 
 
 export default function() {
@@ -61,8 +62,8 @@ export default function() {
 
         return out.filter(s => (
             !search
-            || s.name?.toLowerCase().includes(search.toLowerCase()) 
-            || s.artist?.toLowerCase().includes(search.toLowerCase()))
+            || s.name?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(search.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")) 
+            || s.artist?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(search.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")))
         )
     }
 
@@ -150,23 +151,29 @@ export default function() {
                 _pressed={{opacity: .7}} 
                 mx={3} my={1} rounded={8} p={2}
                 shadow={4} key={i}
-                bg={styles.bg}
+                bg={styles.bgDark2}
                 onLongPress={() => onPlayHandle(item)}
                 borderLeftColor={item.played ? styles.bg : styles.primaryDark}
                 borderLeftWidth={3}
+                onPress={() => !!item.cipher ? navigation.navigate('CipherView', {id: item.id, repId: route.params.id, group}) : null}
             >
                 <HStack justifyContent='space-between' alignItems='center'>
                     <VStack>
                         <Heading 
                             size='sm'
                             style={{textDecorationLine: item.played ? 'line-through' : null}}
-                            color={item.played ? '#666' : styles.fontColor}
+                            color={styles.fontColor}
+                            opacity={item.played ? .5 : null}
                         >{item.name}</Heading>
-                        <Text fontSize='xs' color={item.played ? '#666' : styles.fontColor}>{item.artist}</Text>
+                        <Text 
+                            fontSize='xs' 
+                            color={styles.fontColor}
+                            opacity={item.played ? .5 : null}
+                        >{item.artist}</Text>
                     </VStack>
                     {
                         !!item.cipher ? 
-                        <MaterialIcon onPress={() => navigation.navigate('CipherView', {id: item.id, repId: route.params.id, group})} size={20} name='playlist-music-outline' color={styles.fontColor}/> 
+                        <MaterialIcon style={{opacity: item.played ? .3 : null}} size={20} name='playlist-music-outline' color={styles.fontColor}/> 
                         : null
                     }
                 </HStack>
@@ -189,20 +196,24 @@ export default function() {
 
     function renderGroup(item) {
         const isGroupClosed = closedGroups.includes(item.id)
+
+        const playedSongs = item.songs.filter(i => i.played)
+        const isGroupPlayed = playedSongs.length == item.songs.length && playedSongs.length > 0
+
         return (
             <Box w='100%' key={item.id}>
                 <Pressable 
                     p={2} rounded={5} mx={2}
                     bg={styles.bgDark}
                     onPress={() => groupToggleHande(item)}
+                    _pressed={{opacity: .7}}
                 >
                     <HStack justifyContent='space-between' alignItems='center'>
-                        <Heading size='sm'>{item.name}</Heading>
-                        <Pressable>
-                            {isGroupClosed ? 
-                            <ChevronDownIcon color={styles.fontColor}/> 
-                            : <ChevronUpIcon color={styles.fontColor}/>}
-                        </Pressable>
+                        <Heading 
+                            size='sm' 
+                            style={{textDecorationLine: isGroupPlayed ? 'line-through' : null}}
+                        >{item.name}</Heading>
+                            {isGroupClosed ? <ChevronDownIcon color={styles.fontColor}/> : <ChevronUpIcon color={styles.fontColor}/>}
                     </HStack>
                 </Pressable>
                 {
@@ -217,7 +228,7 @@ export default function() {
 
     return (
         <GradientPageBase>
-            <Box py={3}>
+            <Box h='100%'>
                 <ScrollView>
                     <Box p={3}>
                         <InputSearch onChangeText={setSearch} value={search} onClean={() => setSearch('')}/>
@@ -230,6 +241,7 @@ export default function() {
                         }
                     </VStack>
                 </ScrollView>
+                <Banner/>
             </Box>
         </GradientPageBase>
     )

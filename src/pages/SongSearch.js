@@ -2,12 +2,14 @@ import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Box, ScrollView, VStack } from "native-base";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Keyboard, TextInput, useWindowDimensions } from "react-native";
+import Banner from "../components/Ads/Banner";
 import Button from "../components/Button";
 import GradientPageBase from "../components/GradientPageBase";
 import InputSearch from "../components/InputSearch";
 import RenderSearchedSongList from "../components/RenderSearchedSongList";
 import useCifrasRepo from "../services/repos/cifras";
 import { formatCipher } from "../utils/cipherFind";
+import useAlert from "../utils/useAlert";
 import useLang from "../utils/useLang";
 
 export default function () {
@@ -22,6 +24,7 @@ export default function () {
     const lang = useLang()
     const inputRef = useRef(null)
     const isFocused = useIsFocused()
+    const alert = useAlert()
 
     useEffect(() => {
         if (isFocused && !songs.length) {
@@ -63,15 +66,20 @@ export default function () {
         
         Keyboard.dismiss()
         setLoading(true)
-        const result = await cifrasRepo.searchSongs(search)
+        try {
+            const result = await cifrasRepo.searchSongs(search)
+            setSongs([...result.data.songs])
+        } catch (e) {
+            alert.alertError(e)
+        }
         setLoading(false)
-        setSongs([...result.data.songs])
     }
+
 
     return (
         <GradientPageBase>
 
-            <Box>
+            <Box h='100%'>
                 <Box p={3}>
                     <InputSearch
                         value={search}
@@ -82,6 +90,7 @@ export default function () {
                         ref={inputRef}
                     />
                 </Box>
+                <Banner/>
                 <Box>
                     <ScrollView h={height-150} keyboardShouldPersistTaps='handled'>
                         <VStack space={3} p={3}>

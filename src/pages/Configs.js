@@ -6,9 +6,11 @@ import Text from "../components/Text";
 import Heading from "../components/Heading";
 import useStyle from "../styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { switchLang, switchMode } from "../services/redux/actions";
+import { switchAdsMode, switchLang, switchMode } from "../services/redux/actions";
 import { useSelector, useDispatch } from "react-redux";
 import useLang from "../utils/useLang";
+import GhostButton from "../components/GhostButton";
+import SongStore from "../services/store/SongStore";
 
 export default function () {
 
@@ -20,9 +22,11 @@ export default function () {
     const isFocused = useIsFocused()
 
     const [chordColor, setChordColor] = useState(styles.primaryDark)
+    const [toggleAds, setToggleAds] = useState(false)
 
     useEffect(() => {
         getChordColor()
+        canToggleAds()
     }, [isFocused, selector])
 
     function handleThemeChange() { 
@@ -37,14 +41,24 @@ export default function () {
     }
 
     async function getChordColor() {
-        let color = await AsyncStorage.getItem('chord_color')
+        let color = await AsyncStorage.getItem('chord_color') || styles.primaryDark
         setChordColor(color)
-
     }
 
     function handleLangChange(lang) {
         dispatch(switchLang(lang));
         AsyncStorage.setItem('lang', lang).then()
+    }
+
+    function canToggleAds() {
+        SongStore.findByName('biscoito de melancia')
+                 .then(result => {
+                    if (!!result && result.id) {
+                        setToggleAds(true)
+                    } else {
+                        setToggleAds(false)
+                    }
+                 })
     }
 
     const chordColors = [styles.primaryDark, '#fa1e3c', '#20a19d', '#f44926', '#846dbe', '#444']
@@ -105,6 +119,19 @@ export default function () {
                             <Select.Item value='pt-br' label={lang('Portuguese')}/>
                         </Select>
                     </Box>
+                            
+                    {
+                        toggleAds ?
+                        <Box>
+                            <GhostButton onPress={() => {
+                                let newMode = selector.ads == '1' ? '0' : '1'
+                                dispatch(switchAdsMode(newMode))
+                                AsyncStorage.setItem('ads', newMode)
+                            }}>
+                                {selector.ads == '1' ? 'Disable Ads' : 'Enable Ads'}
+                            </GhostButton>
+                        </Box> : null
+                    }
                 </VStack>
             </Box>
         </GradientPageBase>

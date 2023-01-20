@@ -6,7 +6,7 @@ export default function ({onPress=() => {}}) {
     const img = require('../assets/icons/logo_full_primary.png')
 
     return (
-        <Box ml={4}>
+        <Box ml={-4}>
             <Pressable onPress={onPress} _pressed={{opacity: .7}}>
                 <Image
                     alignSelf='center'

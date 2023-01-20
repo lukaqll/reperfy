@@ -55,6 +55,10 @@ export default function () {
                            .then()
     }
 
+    function onAddHandle() {
+        navigation.navigate('AddSong', {song})
+    }
+
     useEffect(() => {
         songRef.current = {...song}
 
@@ -65,7 +69,12 @@ export default function () {
                     <HStack alignItems='center' space={1} mb={3} mt={1}>
                         <CustomHeaderBackButtom canGoBack={true}/>
                         <VStack>
-                            <Heading size='sm' color={styles.fontColor}>{song.name}</Heading>
+                            <Heading 
+                                size='sm' 
+                                color={styles.fontColor}
+                                style={{textDecorationLine: song.played ? 'line-through' : null}}
+                                opacity={song.played ? .5 : null}
+                            >{song.name}</Heading>
                             <Text fontSize='xs' color={styles.fontColor}>{song.artist}</Text>
                         </VStack>
                     </HStack>
@@ -124,6 +133,11 @@ export default function () {
                                         <Menu.Item onPress={onPlayHandle}>{!song.played ? lang('Set as Played') : lang('Set as unplayed')}</Menu.Item>
                                         : null
                                     }
+                                    {
+                                        !song.id ?
+                                        <Menu.Item onPress={onAddHandle}>{lang('Save song')}</Menu.Item>
+                                        : null
+                                    }
                                 </Menu>
                             </Box>
                             
@@ -150,7 +164,6 @@ export default function () {
 
     return (
         <Box pt={50}>
-            <StatusBar hidden/>
             {
                 song && !loading?
                 <Box h='100%' w='100%' px={2} pb={willShowAbsoluteNext ? 39.9 : null}>

@@ -2,16 +2,18 @@ import { FormControl, Heading, Modal, VStack } from "native-base";
 import React, { useEffect, useState } from "react";
 import useCifrasRepo from "../services/repos/cifras";
 import InputSearch from "./InputSearch";
-import { Keyboard } from "react-native";
+import { Alert, Keyboard } from "react-native";
 import useStyle from "../styles";
 import RenderSearchedSongList from "./RenderSearchedSongList";
 import {formatCipher} from '../utils/cipherFind'
 import useLang from "../utils/useLang";
+import useAlert from "../utils/useAlert";
 
 export default function (props) {
 
     const styles = useStyle()
     const lang = useLang()
+    const alert = useAlert()
 
     const cifrasRepo = useCifrasRepo()
 
@@ -43,8 +45,12 @@ export default function (props) {
 
         Keyboard.dismiss()
         setLoading(true)
-        let result = await cifrasRepo.searchSongs(toSearch)
-        setSongs(result.data.songs)
+        try {
+            let result = await cifrasRepo.searchSongs(toSearch)
+            setSongs(result.data.songs)
+        } catch (e) {
+            alert.alertError(e)
+        }
         setLoading(false)
     }
 
@@ -53,12 +59,17 @@ export default function (props) {
             return
 
         setLoading(true)
-        let result = await cifrasRepo.findSong(song)
+
+        try {
+            let result = await cifrasRepo.findSong(song)
+            let cipher =  formatCipher(result.data)       
+            song.cipher = cipher
+            props.onClose()
+            props.onSelect(song)
+        } catch (e) {
+            alert.alertError(e, 'There was an error when searching for song')
+        }
         
-        let cipher =  formatCipher(result.data)       
-        song.cipher = cipher
-        props.onClose()
-        props.onSelect(song)
         setLoading(false)
     }
 

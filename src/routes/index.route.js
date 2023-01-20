@@ -1,8 +1,9 @@
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ChevronLeftIcon, IconButton, Text } from "native-base";
-import React from "react";
+import React, { useEffect } from "react";
 import CutomHeaderBackButtom from "../components/CustomHeaderBackButtom";
+import GhostButton from "../components/GhostButton";
 import AddRepertory from "../pages/AddRepertory";
 import AddRepertorySongs from "../pages/AddRepertorySongs";
 import AddSong from "../pages/AddSong";
@@ -12,6 +13,7 @@ import useStyle from "../styles";
 import useLang from "../utils/useLang";
 import DrawerRoute from "./drawer.route";
 import TabsRoute from "./tabs.route";
+import {isMountedRef, navigationRef} from './root.route'
 
 const Stack = createNativeStackNavigator()
 
@@ -22,8 +24,13 @@ const IndexRoute = function (props) {
     const lang = useLang()
     // let navigation = useNavigation()
 
+    useEffect( () => {
+        props?.onMount()
+        isMountedRef.current = true;
+    }, [])
+
     return (
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
             <Stack.Navigator
                 initialRouteName="TabsRoute"
                 screenOptions={{

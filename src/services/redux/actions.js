@@ -1,6 +1,5 @@
-import { THEME_CHANGE, LANG_CHANGE } from "./constants";
+import { THEME_CHANGE, LANG_CHANGE, ADS_CHANGE } from "./constants";
 
-// switch mode according to what is specified...
 export const switchMode = (mode) => {
     return {
         type: THEME_CHANGE,
@@ -14,3 +13,10 @@ export const switchLang = (lang) => {
         payload: lang,
     };
 };
+
+export const switchAdsMode = (ads) => {
+    return {
+        type : ADS_CHANGE,
+        payload: ads
+    }
+}

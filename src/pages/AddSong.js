@@ -10,6 +10,8 @@ import useStyle from "../styles";
 import GradientPageBase from "../components/GradientPageBase";
 import Text from "../components/Text";
 import useLang from "../utils/useLang";
+import GhostButton from "../components/GhostButton";
+import Banner from "../components/Ads/Banner";
 export default function ({route}) {
 
     const [song, setSong] = useState({})
@@ -26,11 +28,16 @@ export default function ({route}) {
     const lang = useLang()
 
     useEffect(() => {
-        if (route.params && (id = route.params.id)) {
-            find(id)
-            navigation.setOptions({
-                title: lang('Edit song')
-            })
+        if (route.params) {
+            const params = route.params
+            if (id = params.id) {
+                find(id)
+                navigation.setOptions({
+                    title: lang('Edit song')
+                })
+            } else if (params.song) {
+                setSong(params.song)
+            }
         }
         getAllArtists('')
     }, [isFocused])
@@ -61,7 +68,7 @@ export default function ({route}) {
         } else {
             await SongStore.update(song)
         }
-        navigation.navigate('Songs')
+        navigation.goBack()
     }
 
     function editCipherHandle() {
@@ -71,8 +78,8 @@ export default function ({route}) {
 
     function getArtistsFilter() {
         return artistSug.filter(i => (
-            i.artist?.toLowerCase()
-                    .includes((song.artist ? song.artist.toLowerCase() : '')))
+            i.artist?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")
+                    .includes((song.artist ? song.artist.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "") : '')))
         )
     }
     const artistFiltered = getArtistsFilter()
@@ -126,18 +133,12 @@ export default function ({route}) {
                             </Box>
                         </Box>
                     </Box>
-                    <VStack space={3} mt={10}>
+                    <VStack space={3} mt={7}>
                         <Button bg={styles.primary} onPress={save}>SAVE</Button>
                         {
                             song.cipher ?
-                            <Button 
-                                variant='ghost'
-                                bg={null} 
-                                shadow={null} 
-                                _text={{color: styles.fontColor}} 
-                                _pressed={{backgrounCOlor: null}}
-                                onPress={editCipherHandle}
-                            >EDIT CIPHER</Button> : null
+                            <GhostButton onPress={editCipherHandle}>EDIT CIPHER</GhostButton>
+                            : null
                         }
                     </VStack>
                 </Box>
@@ -169,6 +170,9 @@ export default function ({route}) {
                         setModalAlterCipher(false)
                     }}
                 />
+                <Box alignItems='center'>
+                    <Banner size='retangle' style={{marginTop: 30}}/>
+                </Box>
             </Box>
         </GradientPageBase>
     )

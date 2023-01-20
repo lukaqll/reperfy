@@ -26,6 +26,7 @@ const light = {
 
     bgLight: '#eee',
     bgDark: '#ddd',
+    bgDark2: '#e0e0e0',
     bg: '#f1f1f1',
     fontColor: '#2f2f2f',
 
@@ -43,6 +44,7 @@ const dark = {
 
     bgLight: '#111',
     bgDark: '#333',
+    bgDark2: '#252525',
     bg: '#222',
     fontColor: '#DDD',
 

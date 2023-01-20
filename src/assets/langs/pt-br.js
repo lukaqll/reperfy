@@ -38,6 +38,7 @@ export default {
     'Selected': 'Selecionados',
     'Show next song': 'Mostrar próxima música',
     'Export': 'Exportar',
+    'Download': 'Baixar',
     'Import': 'Importar',
     'Import repertoire': 'Importar repertório',
     'Set as Played': 'Marcar como tocada',
@@ -46,6 +47,10 @@ export default {
     'Create a new Repertoire': 'Criar um novo repertório',
     'No songs here': 'Nenhuma música aqui',
     'Add a song': 'Adicionar uma música',
+    'played': 'tocada',
+    'playeds': 'tocadas',
+    'Save song': 'Salvar música',
+    'Share': 'Compartilhar',
 
     // butons
     'SAVE': 'SALVAR',
@@ -87,6 +92,9 @@ export default {
     'Using already registered songs for import': 'Usar músicas já registradas para a importação',
     'This option allows you to search for already registered songs by name to link to the repertoire to be imported.': 'Esta opção permite buscar por nome músicas já registradas para vincular ao repertório a ser importado.',
     'Ops... Has an error': 'Ops... Houve algum erro',
+    'There was an error when searching for song': 'Houve um erro ao buscar música',
+    'No internet connection': 'Sem conexão com a internet',
+    'App without permission': 'App sem permissão',
 
     // messages
     'Add groups to repertoire to link songs': 'Adicione grupos ao repertório para vincular músicas',

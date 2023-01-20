@@ -14,6 +14,10 @@ import {importHandle as repertoireImport} from "../utils/repertoireExport";
 import Text from "../components/Text";
 import GhostButton from "../components/GhostButton";
 import Heading from "../components/Heading";
+import ModalImportFile from "../components/ModalImportFile";
+import ReceiveSharingIntentModule from "react-native-receive-sharing-intent";
+import useAlert from "../utils/useAlert";
+import Banner from "../components/Ads/Banner";
 
 export default function ({route}) {
 
@@ -26,10 +30,17 @@ export default function ({route}) {
     const lang = useLang()
     const isFocused = useIsFocused()
     const navigation = useNavigation()
+    const alert = useAlert()
 
     useEffect(() => {
-        if (route.params && (id = route.params.id)) {
-            find(id)
+        if (route.params) {
+            if (route.params.id) {
+                find(route.params.id)
+            }
+
+            if (route.params.sharedFile) {
+                setFileResponse({...route.params.sharedFile})
+            }
         }
     }, [isFocused])
 
@@ -50,40 +61,13 @@ export default function ({route}) {
             if (file && file[0]) {
                 setFileResponse(file[0])                
             }
-        } catch (err) {
-            if (typeof err == 'string') {
-                Alert.alert(lang(err))
-            }
+        } catch (e) {
+            if (e.message == 'User canceled document picker ')
+                return
+
+            alert.alertError(e)
         }
     }, []);
-
-    const handleImportFile = useCallback(async () => {
-        Alert.alert(
-            (lang('Import')  + ' ' + fileResponse.name + '?'), '',
-            [
-                {text: lang('No')},
-                {text: lang('Yes'), onPress: async () => {
-                    try {
-                        const imported = await repertoireImport(fileResponse, allowsSearchSongImport)
-                        if (imported) {
-                            Alert.alert(lang('Successfully imported'))
-                            setFileResponse(null)
-                            setAllowsSearchSongImport(true)
-                            navigation.navigate('Repertoires')
-                            return
-                        }
-                    } catch (err) {
-                        if (typeof err == 'string') {
-                            Alert.alert(lang(err))
-                        } else {
-                            console.error(err)
-                            Alert.alert(lang('Ops... Has an error'))
-                        }
-                    }
-                }},
-            ]
-        )
-    })
 
     /**
      * find repertory
@@ -119,7 +103,7 @@ export default function ({route}) {
             }
             navigation.navigate('AddRepertorySongs', {id})
         } catch (e) {
-            Toast.show({description: lang(e)})
+            alert.alertError(e)
         }
     }
 
@@ -141,36 +125,23 @@ export default function ({route}) {
                     >IMPORT BY A FILE</GhostButton>
                     : null
                 }
-                <Modal isOpen={!!fileResponse} onClose={() => setFileResponse(null)}>
-                    <Modal.Content bg={styles.bg}>
-                        <Modal.Header bg={styles.bg} _text={{color: styles.fontColor}}>
-                            <Text>Arquivo: {fileResponse?.name}</Text>
-                            <Modal.CloseButton/>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <HStack alignItems='center' space={2}>
-                                <Switch 
-                                    size='lg'
-                                    onTrackColor={styles.primary}
-                                    value={allowsSearchSongImport}
-                                    onToggle={setAllowsSearchSongImport}
-                                />
-                                <Heading size='xs' mr={3} flex={1}>Using already registered songs for import</Heading>
-                            </HStack>
-                            <NBAlert bg={styles.bgDark} mt={3}>
-                                <Text>This option allows you to search for already registered songs by name to link to the repertoire to be imported.</Text>
-                            </NBAlert>
-                            <Box mt={3}>
-                                <HStack w='100%' justifyContent='space-between'>
-                                    <GhostButton colorScheme='error' onPress={() => setFileResponse(null)}>Cancel</GhostButton>
-                                    <GhostButton colorScheme='success' onPress={handleImportFile}>Import</GhostButton>
-                                </HStack>
-                            </Box>
-                            
-                        </Modal.Body>
-                    </Modal.Content>
-                </Modal>
+
+                <ModalImportFile
+                    fileResponse={fileResponse}
+                    onClose={() => {
+                        setFileResponse(null)
+                        ReceiveSharingIntentModule.clearReceivedFiles()
+                    }}
+                    onImport={() => {
+                        setFileResponse(null)
+                        ReceiveSharingIntentModule.clearReceivedFiles()
+                        navigation.navigate('Repertoires')
+                    }}
+                />
                 <Loader loading={loading}/>
+                <Box alignItems='center'>
+                    <Banner size='retangle' style={{marginTop: 20}}/>
+                </Box>
             </Box>
         </GradientPageBase>
     )

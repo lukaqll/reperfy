@@ -6,7 +6,7 @@ import { Box } from "native-base";
 // import HTMLView from "react-native-htmlview";
 import { StyleSheet } from "react-native";
 
-export default function ({song, options}) {
+export default function ({song, options, h='100%'}) {
 
     const styles = useStyle()
 
@@ -63,7 +63,7 @@ export default function ({song, options}) {
     })
 
     return (
-        <Box h='100%' w='100%'>
+        <Box h={h || '100%'} w='100%'>
             <WebView
                 contentInset={50}
                 source={{html: getHtmlWithStyle()}}

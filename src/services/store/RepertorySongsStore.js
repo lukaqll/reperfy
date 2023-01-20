@@ -133,6 +133,24 @@ class RepertoryStore{
 
         return result.rows.item(0)
     }
+
+    async getPlayedByRep(repId) {
+        const result = await Database.executeSql(`
+            SELECT rs.* FROM 
+                repertory_songs rs
+            JOIN repertory_groups g
+                ON g.id = rs.group_id
+            WHERE 
+                g.repertory_id = ?
+                AND rs.played = 1;
+        `, [repId]);
+
+        let out = []
+        for( let i = 0; i < result.rows.length; i++ ){
+            out.push(result.rows.item(i))
+        }
+        return out
+    }
 }
 
 export default new RepertoryStore;

@@ -3,12 +3,19 @@ import RepertoryStore from "../services/store/RepertoryStore"
 import SongStore from "../services/store/SongStore"
 import RNFS from 'react-native-fs';
 import * as localStorage from "../utils/localStorage";
+import { Alert, PermissionsAndroid } from "react-native";
 
 const saveHandle = async (content, fileName) => {
 
+    const permissionType = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+    const granted = await PermissionsAndroid.request(permissionType)
+    if (granted != PermissionsAndroid.RESULTS.GRANTED) {
+        throw 'App without permission'
+    }
+    
+    console.log(granted)
     if (!content.name)
         throw "Nada a ser salvo"
-
     
     const date = new Date()
 
@@ -20,7 +27,7 @@ const saveHandle = async (content, fileName) => {
 
     let stringContent = JSON.stringify(content)
     
-    let saved = await localStorage.createFile(fileName, stringContent)
+    return await localStorage.createFile(fileName, stringContent)
 }
 
 const exportHandle = async (repId, name) => {
@@ -68,11 +75,19 @@ const importHandle = async (path, allowsSearchSongImport = false) => {
         content.name += ' (1)'
     }
 
+    
+    
     let createdRep = await RepertoryStore.insert({name: content.name})
+
+    if (!createdRep || !createdRep.insertId) {
+        throw 'Invalid file for import'
+    }
+
     let repId = createdRep.insertId
 
     for (const group of content.groups) {
 
+        
         // create groups
         let createdGroup = await RepertoryGroupsStore.insert({
             repertory_id: repId,
