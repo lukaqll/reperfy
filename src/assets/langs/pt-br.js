@@ -51,6 +51,7 @@ export default {
     'playeds': 'tocadas',
     'Save song': 'Salvar música',
     'Share': 'Compartilhar',
+    'Add new song after saving': 'Adicionar nova música após salvar',
 
     // butons
     'SAVE': 'SALVAR',
@@ -62,6 +63,7 @@ export default {
     'EXPORT': 'EXPORTAR',
     'Cancel': 'Cancelar',
     'Change groups order': 'Alterar ordem dos grupos',
+    'Add a new song': 'Adicionar uma nova música',
 
     // inputs
     'Search': 'Buscar',
@@ -95,6 +97,8 @@ export default {
     'There was an error when searching for song': 'Houve um erro ao buscar música',
     'No internet connection': 'Sem conexão com a internet',
     'App without permission': 'App sem permissão',
+    'There is already a song with this name': 'Já existe uma música com este nome',
+    'Create anyway?': 'Criar mesmo assim?',
 
     // messages
     'Add groups to repertoire to link songs': 'Adicione grupos ao repertório para vincular músicas',

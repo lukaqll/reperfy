@@ -76,8 +76,14 @@ export default function () {
                                 </Pressable>
                             )}
                         >
-                            <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})}>{lang('Edit')}</Menu.Item>
-                            <Menu.Item onPress={() => deleteSong(item.id)} _text={{color: '#f00'}}>{lang('Delete')}</Menu.Item>
+                            <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})} >
+                                <FeaterIcon name='edit' size={15}/>
+                                {lang('Edit')}
+                            </Menu.Item>
+                            <Menu.Item onPress={() => deleteSong(item.id)} _text={{color: styles.danger}}>
+                                <FeaterIcon name='trash' size={15} color={styles.danger}/>
+                                {lang('Delete')}
+                            </Menu.Item>
                         </Menu>
                     </HStack>
                 </Box>

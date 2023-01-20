@@ -1,4 +1,4 @@
-import { Box, ChevronDownIcon, ChevronUpIcon, FlatList, FormControl, Pressable, SearchIcon, Toast, VStack } from "native-base";
+import { Box, ChevronDownIcon, ChevronUpIcon, FlatList, FormControl, HStack, Pressable, SearchIcon, Switch, Toast, VStack } from "native-base";
 import React, { useEffect, useRef, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -12,6 +12,9 @@ import Text from "../components/Text";
 import useLang from "../utils/useLang";
 import GhostButton from "../components/GhostButton";
 import Banner from "../components/Ads/Banner";
+import Loader from "../components/Loader";
+import { Alert } from "react-native";
+import Heading from "../components/Heading";
 export default function ({route}) {
 
     const [song, setSong] = useState({})
@@ -21,6 +24,7 @@ export default function ({route}) {
     const [artistSug, setArtistSug] = useState([])
     const [loading, setLoading] = useState(false)
     const [autocompleteOpen, setAutocompleteOpen] = useState(false)
+    const [createNewAfterSave, setCreateNewAfterSave] = useState(true)
 
     const isFocused = useIsFocused()
     const navigation = useNavigation()
@@ -57,18 +61,59 @@ export default function ({route}) {
         setLoading(false)
     }
 
-    async function save() {
+    async function saveHandle() {
 
         if (!song.name) {
             Toast.show({description: lang('Enter a name')})
             return
         }
+        setLoading(true)
+
+        if (!song.id) {
+            const sameNameSong = await SongStore.findByName(song.name)
+            console.log(sameNameSong)
+            if (sameNameSong && sameNameSong.id) {
+                Alert.alert(
+                    lang('There is already a song with this name'),
+                    lang('Create anyway?'),
+                    [
+                        {text: lang('No')},
+                        {
+                            text: lang('Yes'),
+                            onPress: save
+                        },
+                    ]
+                )
+            } else {
+                await save()
+            }
+        } else {
+            await save()
+        }
+        setLoading(false)
+    }
+
+    async function save() {
+
         if (!song.id) {
             await SongStore.insert(song)
         } else {
             await SongStore.update(song)
         }
-        navigation.goBack()
+
+        if (createNewAfterSave && !song.id) {
+            Toast.show({description: lang('Saved')})
+            setSong({})
+        } else {
+
+            if (route.params && (redirect = route.params.redirect)) {
+                if (redirect.to) {
+                    navigation.navigate(redirect.to, redirect.params)
+                }
+            } else {
+                navigation.goBack()
+            }
+        }
     }
 
     function editCipherHandle() {
@@ -111,6 +156,19 @@ export default function ({route}) {
                                 }
                             />
 
+                            {
+                                !song.id ?
+                                <HStack alignItems='center' space={2} mt={3}>
+                                    <Switch
+                                        size='lg'
+                                        onTrackColor={styles.primary}
+                                        value={createNewAfterSave}
+                                        onToggle={setCreateNewAfterSave}
+                                    />
+                                    <Heading size='xs' mr={3} flex={1}>Add new song after saving</Heading>
+                                </HStack> : null
+                            }
+
                             <Box>
                                 {
                                     autocompleteOpen && artistFiltered.length ? 
@@ -134,7 +192,7 @@ export default function ({route}) {
                         </Box>
                     </Box>
                     <VStack space={3} mt={7}>
-                        <Button bg={styles.primary} onPress={save}>SAVE</Button>
+                        <Button bg={styles.primary} onPress={saveHandle}>SAVE</Button>
                         {
                             song.cipher ?
                             <GhostButton onPress={editCipherHandle}>EDIT CIPHER</GhostButton>
@@ -174,6 +232,7 @@ export default function ({route}) {
                     <Banner size='retangle' style={{marginTop: 30}}/>
                 </Box>
             </Box>
+            <Loader loading={loading}/>
         </GradientPageBase>
     )
 }

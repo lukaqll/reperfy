@@ -1,5 +1,5 @@
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { Box, FlatList, Heading, HStack, Menu, VStack, Pressable, Modal, Center } from "native-base";
+import { Box, FlatList, Heading, HStack, Menu, VStack, Pressable, Modal, Center, useDisclose, Actionsheet, Text as RNText } from "native-base";
 import React, { useEffect, useState } from "react";
 import RepertoryStore from "../services/store/RepertoryStore";
 import { Alert, StyleSheet, useWindowDimensions } from "react-native";
@@ -28,11 +28,13 @@ export default function () {
     const {width} = useWindowDimensions()
     const lang = useLang()
     const alert = useAlert()
+    const {onOpen, onClose, isOpen} = useDisclose()
 
     const [repertoires, setRepertoires] = useState([])
     const [fileName, setFileName] = useState('')
     const [idToExport, setIdToExport] = useState()
     const [loading, setLoading] = useState(true)
+    const [repAction, setRepAction] = useState({})
 
     const numColumns = 2
     const tileSize = width/numColumns
@@ -40,8 +42,22 @@ export default function () {
     useEffect(() => {
         if (isFocused) {
             getAllRepertoires()
+        } else {
+            setRepAction({})
+            onClose()
         }
     }, [isFocused])
+
+    useEffect(() => {
+        if (!isOpen) {
+            setRepAction({})
+        }
+    }, [isOpen])
+
+    function actionSheetOpenHandle(item) {
+        setRepAction(item)
+        onOpen()
+    }
 
     async function getAllRepertoires() {
         try {
@@ -88,7 +104,8 @@ export default function () {
     async function shareHandle(item) {
 
         let fileUrl = null
-
+        onClose()
+        setRepAction({})
         try {
 
             setLoading(true)
@@ -136,19 +153,9 @@ export default function () {
                                 <Heading size='sm' color='#FFF'>{item.name}</Heading>
                             </VStack>
                             <Box>
-                                <Menu
-                                    placement="left"
-                                    trigger={props => (
-                                        <Pressable {...props} _pressed={{opacity: .7}}>
-                                            <FeaterIcon name='more-vertical' size={20} color='#FFF'/>
-                                        </Pressable>
-                                    )}
-                                >
-                                    <Menu.Item onPress={() => navigation.navigate('AddRepertory', {id: item.id})}>{lang('Edit')}</Menu.Item>
-                                    <Menu.Item onPress={() => {setIdToExport(item.id); setFileName(item.name)}}>{lang('Download')}</Menu.Item>
-                                    <Menu.Item onPress={() => {shareHandle(item)}}>{lang('Share')}</Menu.Item>
-                                    <Menu.Item onPress={() => deleteReportory(item.id)} _text={{color: '#f00'}}>{lang('Delete')}</Menu.Item>
-                                </Menu>
+                                <Pressable _pressed={{opacity: .7}} onPress={() => actionSheetOpenHandle(item)}>
+                                    <FeaterIcon name='more-vertical' size={20} color='#FFF'/>
+                                </Pressable>
                             </Box>
                         </HStack>
 
@@ -189,6 +196,16 @@ export default function () {
                     </Box>
                     : null
                 }
+
+                <Actionsheet isOpen={isOpen && !!repAction.id} onClose={onClose} >
+                    <Actionsheet.Content>
+                        <RNText>{repAction.name}</RNText>
+                        <Actionsheet.Item startIcon={<FeaterIcon size={20} name="edit"/>} onPress={() => navigation.navigate('AddRepertory', {id: repAction.id})}>{lang('Edit')}</Actionsheet.Item>
+                        <Actionsheet.Item startIcon={<FeaterIcon size={20} name="download"/>} onPress={() => {setIdToExport(repAction.id); setFileName(repAction.name)}}>{lang('Download')}</Actionsheet.Item>
+                        <Actionsheet.Item startIcon={<FeaterIcon size={20} name="share-2"/>} onPress={() => {shareHandle(repAction)}}>{lang('Share')}</Actionsheet.Item>
+                        <Actionsheet.Item startIcon={<FeaterIcon size={20} color={styles.danger} name="trash"/>} onPress={() => deleteReportory(repAction.id)} _text={{color: '#f00'}}>{lang('Delete')}</Actionsheet.Item>
+                    </Actionsheet.Content>
+                </Actionsheet>
                 
                 <Modal isOpen={!!idToExport} onClose={() => setIdToExport(null)} >
                     <Modal.Content bg={styles.bg}>

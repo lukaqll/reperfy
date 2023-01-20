@@ -20,6 +20,7 @@ export default function(props) {
             variant='ghost'
             _pressed={{backgroundColor: '#FFFFFF00', opacity: .7}}
             colorScheme={styles.mode == 'dark' ? 'dark' : 'light'}
+            rounded='full'
             {...props}
         >
             {renderChildren(props.children)}

@@ -16,8 +16,8 @@ const Banner = ({size = 'adaptative', style = {}}) => {
     }
     return (
         <BannerAd
-            // unitId="ca-app-pub-5665151708535420/9708485970"
-            unitId="ca-app-pub-3940256099942544/6300978111"
+            unitId="ca-app-pub-5665151708535420/9708485970"
+            // unitId="ca-app-pub-3940256099942544/6300978111"
             size={sizes[size]}
             
             requestOptions={{

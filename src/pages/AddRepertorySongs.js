@@ -47,6 +47,13 @@ export default function ({route}) {
     useEffect(() => {
         if (route.params && (id = route.params.id)) {
             find(id)
+
+            if (rep.id) {
+                if (route.params && (groupId = route.params.groupId)) {
+                    setAddGroupSongsId(groupId)
+                    delete route.params.groupId
+                }
+            }
         }
         getAllSongs()
     }, [isFocused])
@@ -58,11 +65,15 @@ export default function ({route}) {
                 title: rep.name,
                 headerRight: () => <GhostButton onPress={() => navigation.navigate('Repertoires')} _text={{color: styles.primary}} size='lg'>OK</GhostButton>
             })
+
+            if (route.params && (groupId = route.params.groupId)) {
+                setAddGroupSongsId(groupId)
+                delete route.params.groupId
+            }
         }
     }, [rep])
 
     useEffect(() => {
-
         if (!!addGroupSongsId) {
             const gp = rep.groups.find(g => g.id == addGroupSongsId)
             let selSongs = []
@@ -160,14 +171,15 @@ export default function ({route}) {
         if (!addGroupSongsId)
             return
 
-        setLoading(true)
-        await RepertoryGroupsStore.detachAllSongs(addGroupSongsId)
-        if (!!selectedSongIds.length) {
-            await RepertoryGroupsStore.attachSongs(addGroupSongsId, selectedSongIds)
-        }
-        await find(rep.id)
+        let songsIds = addGroupSongsId
         setAddGroupSongsId(false)
         setSelectedSongIds([])
+        setLoading(true)
+        await RepertoryGroupsStore.detachAllSongs(songsIds)
+        if (!!selectedSongIds.length) {
+            await RepertoryGroupsStore.attachSongs(songsIds, selectedSongIds)
+        }
+        await find(rep.id)
     }
 
     /**
@@ -253,11 +265,7 @@ export default function ({route}) {
                             </VStack>
                         </HStack>
                         {
-                            !!item.cipher ? 
-                            <Pressable onPress={() => navigation.navigate('CipherView', {id: item.id})} _pressed={{opacity: .7}}>
-                                <Icon color={styles.fontColor} size={20} name='playlist-music-outline'/> 
-                            </Pressable>
-                            : null
+                            !!item.cipher ? <Icon color={styles.fontColor} size={20} name='playlist-music-outline'/> : null
                         }
                     </HStack>
                 </Pressable>
@@ -346,15 +354,23 @@ export default function ({route}) {
                                                 </Pressable>
                                             )}
                                         >
-                                            <Menu.Item onPress={() => setAddGroupSongsId(g.id)}>{lang('Link songs')}</Menu.Item>
+                                            <Menu.Item onPress={() => setAddGroupSongsId(g.id)}>
+                                                <FeaterIcon name='plus' size={15}/>
+                                                {lang('Link songs')}
+                                            </Menu.Item>
                                             <Menu.Item onPress={() => {
                                                     setGroup({...g})
                                                     setModalGroup(true)
                                                 }}
                                             >
+                                                <FeaterIcon name='edit' size={15}/>
                                                 {lang('Edit')}
                                             </Menu.Item>
-                                            <Menu.Item _text={{color: styles.danger}} onPress={() => deleteGroupHandle(g.id)}>{lang('Delete')}</Menu.Item>
+                                            <Menu.Item _text={{color: styles.danger}} onPress={() => deleteGroupHandle(g.id)}>
+                                                <FeaterIcon name='trash' size={15} color={styles.danger}/>
+                                                {lang('Delete')}
+                                            </Menu.Item>
+
                                         </Menu>
                                     </HStack>
                                 </Box>
@@ -405,6 +421,24 @@ export default function ({route}) {
                                         keyExtractor={(_,i) => i}
                                         data={getFilteredSongs()}
                                         renderItem={renderSelectableSong}
+                                        ListFooterComponent={
+                                            <GhostButton 
+                                                mt={5}
+                                                variant='outline'
+                                                onPress={() => {
+                                                    setAddGroupSongsId(null)
+                                                    navigation.navigate('AddSong', {
+                                                        redirect: {
+                                                            to: 'AddRepertorySongs',
+                                                            params: {
+                                                                groupId: addGroupSongsId,
+                                                                id: rep.id,
+                                                            }
+                                                        }
+                                                    })
+                                                }}
+                                            >Add a new song</GhostButton>
+                                        }
                                     />
                                 </Box>
                             </Box>
