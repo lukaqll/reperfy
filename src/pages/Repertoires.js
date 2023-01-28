@@ -200,9 +200,10 @@ export default function () {
                 <Actionsheet isOpen={isOpen && !!repAction.id} onClose={onClose} >
                     <Actionsheet.Content>
                         <RNText>{repAction.name}</RNText>
-                        <Actionsheet.Item startIcon={<FeaterIcon size={20} name="edit"/>} onPress={() => navigation.navigate('AddRepertory', {id: repAction.id})}>{lang('Edit')}</Actionsheet.Item>
-                        <Actionsheet.Item startIcon={<FeaterIcon size={20} name="download"/>} onPress={() => {setIdToExport(repAction.id); setFileName(repAction.name)}}>{lang('Download')}</Actionsheet.Item>
-                        <Actionsheet.Item startIcon={<FeaterIcon size={20} name="share-2"/>} onPress={() => {shareHandle(repAction)}}>{lang('Share')}</Actionsheet.Item>
+                        <Actionsheet.Item startIcon={<FeaterIcon size={20} color="#444" name="edit"/>} onPress={() => navigation.navigate('AddRepertory', {id: repAction.id})}>{lang('Edit')}</Actionsheet.Item>
+                        <Actionsheet.Item startIcon={<FeaterIcon size={20} color="#444" name="plus"/>} onPress={() => navigation.navigate('AddRepertorySongs', {id: repAction.id})}>{lang('Add songs')}</Actionsheet.Item>
+                        <Actionsheet.Item startIcon={<FeaterIcon size={20} color="#444" name="download"/>} onPress={() => {setIdToExport(repAction.id); setFileName(repAction.name)}}>{lang('Download')}</Actionsheet.Item>
+                        <Actionsheet.Item startIcon={<FeaterIcon size={20} color="#444" name="share-2"/>} onPress={() => {shareHandle(repAction)}}>{lang('Share')}</Actionsheet.Item>
                         <Actionsheet.Item startIcon={<FeaterIcon size={20} color={styles.danger} name="trash"/>} onPress={() => deleteReportory(repAction.id)} _text={{color: '#f00'}}>{lang('Delete')}</Actionsheet.Item>
                     </Actionsheet.Content>
                 </Actionsheet>

@@ -1,5 +1,6 @@
 import Database from './Database';
 import RepertorySongsStore from './RepertorySongsStore';
+import RepertoryGroupsStore from './RepertoryGroupsStore';
 
 class SongStore{
 
@@ -103,100 +104,71 @@ class SongStore{
     }
 
     async getNextSong(songId, repId, groupId, onlyWithCipher = true) {
-        const result = await Database.executeSql(`
-            SELECT
-               ns.*,
-               concrete_next_group.id as next_group_id
+
+        let repSong = await RepertorySongsStore.find(songId, groupId);
+        let curGroup = await RepertoryGroupsStore.fingWithLastIdx(groupId)
+        let isLastSongOfCurrentGroup = repSong.idx == curGroup.songs_idx
+        let nextGroupIdx = isLastSongOfCurrentGroup ? (curGroup.idx+1) : curGroup.idx
+        let nextSongIdx  = isLastSongOfCurrentGroup ? 0 : (repSong.idx+1)
+
+        let result = await Database.executeSql(`
+            SELECT 
+                s.*, g.id as next_group_id
             FROM
-                songs s
-
-            JOIN repertory_songs cur 
-                ON cur.song_id = s.id
-            JOIN repertory_groups rg
-                ON cur.group_id = rg.id
-                AND rg.repertory_id = '${repId}'
-                AND rg.id = '${groupId}'
+                repertory_groups g
+            JOIN repertory_songs rs
+                ON rs.group_id = g.id
+                AND rs.idx = ${nextSongIdx}
+                AND g.idx = ${nextGroupIdx}
             
-            JOIN repertory_groups next_group
-               ON next_group.repertory_id = rg.repertory_id
-               
-            JOIN repertory_songs next
-                ON ( 
-                    ( next.group_id = cur.group_id AND next.idx >= cur.idx ) 
-                    OR 
-                    ( 
-                        next.group_id != cur.group_id 
-                        AND next_group.idx > rg.idx
-                        AND next.idx <= cur.idx 
-                    )
-                )
-                      
-            JOIN songs ns
-                ON ns.id = next.song_id
-                AND s.id != ns.id
-                ${onlyWithCipher ? `AND ns.cipher != ''` : ''}
-
-            JOIN repertory_groups concrete_next_group
-                ON concrete_next_group.id = next.group_id
-                AND concrete_next_group.repertory_id = next_group.repertory_id
-                AND next.group_id = concrete_next_group.id
-               
-            WHERE s.id = '${songId}'
-            
-            ORDER BY next_group.idx, next.idx
-            LIMIT 1;
+            JOIN songs s
+                ON s.id = rs.song_id
+                ${onlyWithCipher ? `AND s.cipher != '' AND s.cipher IS NOT NULL` : ''}
+            WHERE g.repertory_id = ${repId}
         `)
-
         return result.rows.item(0)
     }
 
     async getPrevSong(songId, repId, groupId, onlyWithCipher = true) {
-        const result = await Database.executeSql(`
-        SELECT
-            ps.*,
-            concrete_prev_group.id as prev_group_id
-        FROM
-            songs s
 
-        JOIN repertory_songs cur 
-            ON cur.song_id = s.id
-        JOIN repertory_groups cur_group
-            ON cur.group_id = cur_group.id
-            AND cur_group.repertory_id = '${repId}'
-            AND cur_group.id = '${groupId}'
-        
-        JOIN repertory_groups prev_group
-            ON prev_group.repertory_id = cur_group.repertory_id
-            
-        JOIN repertory_songs prev
-            ON ( 
-                ( prev.group_id = cur.group_id AND prev.idx < cur.idx ) 
-                OR 
-                ( 
-                    prev.group_id != cur.group_id 
-                    AND prev_group.idx < cur_group.idx
-                    AND prev.idx >= cur.idx
-                )
-            )
-                
-        JOIN songs ps
-            ON ps.id = prev.song_id
-            AND s.id != ps.id
-            ${onlyWithCipher ? `AND ps.cipher != ''` : ''}
+        let repSong = await RepertorySongsStore.find(songId, groupId);
+        let curGroup = await RepertoryGroupsStore.fingWithLastIdx(groupId)
+        let isFirstSongOfCurrentGroup = repSong.idx == 0
+        let prevGroupIdx = isFirstSongOfCurrentGroup ? (curGroup.idx-1) : curGroup.idx
 
-        JOIN repertory_groups concrete_prev_group
-            on concrete_prev_group.id = prev_group.id
-            and concrete_prev_group.repertory_id = prev_group.repertory_id
-            and prev.group_id = concrete_prev_group.id
-            
-        WHERE s.id = '${songId}'
-        
-        ORDER BY prev_group.idx desc, prev.idx desc
-        LIMIT 1;
+        // find prev group by idx and rep with max song idx
+        let prevGroup = await Database.executeSql(`
+            SELECT g.*, rs.idx AS last_song_idx FROM
+                repertory_groups g
+            JOIN repertory_songs rs
+                ON rs.group_id = g.id
+            WHERE g.idx = ${prevGroupIdx}
+                AND g.repertory_id = ${repId}
+            GROUP BY g.id HAVING MAX(rs.idx)
+            LIMIT 1
         `)
+        prevGroup = prevGroup.rows.item(0)
+        if (!prevGroup || !prevGroup.id)
+            return null
 
-        const out = result.rows.item(0)
-        return out
+        let prevSongIdx  = isFirstSongOfCurrentGroup ? prevGroup.last_song_idx : (repSong.idx-1)
+
+        let result = await Database.executeSql(`
+            SELECT 
+                s.*, g.id as next_group_id
+            FROM
+                repertory_groups g
+            JOIN repertory_songs rs
+                ON rs.group_id = g.id
+                AND rs.idx = ${prevSongIdx}
+                AND g.idx = ${prevGroupIdx}
+            JOIN songs s
+                ON s.id = rs.song_id
+                ${onlyWithCipher ? `AND s.cipher != '' AND s.cipher IS NOT NULL` : ''}
+            WHERE g.repertory_id = ${repId}
+            LIMIT 1
+        `)
+        return result.rows.item(0)
     }
 }
 

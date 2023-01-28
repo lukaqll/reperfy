@@ -107,25 +107,6 @@ class RepertoryStore{
         return out
     }
 
-    async getAllByRepertoryToDelte(idRep) {
-
-        let result = await Database.executeSql(`
-            SELECT 
-                rs.*
-            FROM
-                repertory_songs rs
-                JOIN repertory_groups g ON g.id = rs.group_id
-                    AND g.repertory_id = ?
-            GROUP BY rs.id
-        `, [idRep])
-
-        let out = []
-        for( let i = 0; i < result.rows.length; i++ ){
-            out.push(result.rows.item(i))
-        }
-        return out
-    }
-
     async find(songId, groupId) {
         const result = await Database.executeSql(`
             SELECT * FROM repertory_songs WHERE song_id = ? AND group_id = ? LIMIT 1;
@@ -151,6 +132,7 @@ class RepertoryStore{
         }
         return out
     }
+
 }
 
 export default new RepertoryStore;

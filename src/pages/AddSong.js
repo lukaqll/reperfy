@@ -71,7 +71,6 @@ export default function ({route}) {
 
         if (!song.id) {
             const sameNameSong = await SongStore.findByName(song.name)
-            console.log(sameNameSong)
             if (sameNameSong && sameNameSong.id) {
                 Alert.alert(
                     lang('There is already a song with this name'),
@@ -155,20 +154,6 @@ export default function ({route}) {
                                     : <ChevronDownIcon color={styles.fontColor} mr={3} onPress={() => setAutocompleteOpen(true)}/>
                                 }
                             />
-
-                            {
-                                !song.id ?
-                                <HStack alignItems='center' space={2} mt={3}>
-                                    <Switch
-                                        size='lg'
-                                        onTrackColor={styles.primary}
-                                        value={createNewAfterSave}
-                                        onToggle={setCreateNewAfterSave}
-                                    />
-                                    <Heading size='xs' mr={3} flex={1}>Add new song after saving</Heading>
-                                </HStack> : null
-                            }
-
                             <Box>
                                 {
                                     autocompleteOpen && artistFiltered.length ? 
@@ -190,6 +175,18 @@ export default function ({route}) {
                                 }
                             </Box>
                         </Box>
+                        {
+                            !song.id ?
+                            <HStack alignItems='center' space={2} mt={3}>
+                                <Switch
+                                    size='lg'
+                                    onTrackColor={styles.primary}
+                                    value={createNewAfterSave}
+                                    onToggle={setCreateNewAfterSave}
+                                />
+                                <Heading size='xs' mr={3} flex={1}>Add new song after saving</Heading>
+                            </HStack> : null
+                        }
                     </Box>
                     <VStack space={3} mt={7}>
                         <Button bg={styles.primary} onPress={saveHandle}>SAVE</Button>
@@ -210,10 +207,7 @@ export default function ({route}) {
 
                         let newSong = {...song}
                         newSong.name = selected.TITULO
-
-                        if (!newSong.artist) {
-                            newSong.artist = selected.ARTISTA
-                        }
+                        newSong.artist = selected.ARTISTA
                         setSong({...newSong})
                     }}
                     initialSongName={song.name || ''}
@@ -226,6 +220,10 @@ export default function ({route}) {
                         const newSong = {...song, ...saved}
                         setSong(newSong)
                         setModalAlterCipher(false)
+                    }}
+                    onBack={() => {
+                        setModalAlterCipher(false)
+                        setModalAddCipher(true)
                     }}
                 />
                 <Box alignItems='center'>

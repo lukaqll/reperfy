@@ -52,6 +52,7 @@ export default {
     'Save song': 'Salvar música',
     'Share': 'Compartilhar',
     'Add new song after saving': 'Adicionar nova música após salvar',
+    'Back': 'Voltar',
 
     // butons
     'SAVE': 'SALVAR',
@@ -64,7 +65,9 @@ export default {
     'Cancel': 'Cancelar',
     'Change groups order': 'Alterar ordem dos grupos',
     'Add a new song': 'Adicionar uma nova música',
-
+    'Add this searched song': 'Adicionar esta música procurada',
+    'Add songs': 'Adicionar músicas',
+    
     // inputs
     'Search': 'Buscar',
     'Name': 'Nome',
@@ -99,6 +102,7 @@ export default {
     'App without permission': 'App sem permissão',
     'There is already a song with this name': 'Já existe uma música com este nome',
     'Create anyway?': 'Criar mesmo assim?',
+    'Already in group': 'Já está no grupo',
 
     // messages
     'Add groups to repertoire to link songs': 'Adicione grupos ao repertório para vincular músicas',

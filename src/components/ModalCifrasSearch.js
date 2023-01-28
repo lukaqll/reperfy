@@ -67,7 +67,7 @@ export default function (props) {
             props.onClose()
             props.onSelect(song)
         } catch (e) {
-            alert.alertError(e, 'There was an error when searching for song')
+            Alert.alert(lang('Opss...'), lang('There was an error when searching for song'))
         }
         
         setLoading(false)

@@ -62,7 +62,7 @@ export default function ({route}) {
                 setFileResponse(file[0])                
             }
         } catch (e) {
-            if (e.message == 'User canceled document picker ')
+            if (e.message == 'User canceled document picker')
                 return
 
             alert.alertError(e)
@@ -83,7 +83,7 @@ export default function ({route}) {
     /**
      * save repertory
      */
-    async function save() {
+    async function save(addSongs=false) {
 
         try {
 
@@ -101,7 +101,12 @@ export default function ({route}) {
             } else {
                 await RepertoryStore.update(rep)
             }
-            navigation.navigate('AddRepertorySongs', {id})
+
+            if (addSongs) {
+                navigation.navigate('AddRepertorySongs', {id})
+            } else {
+                navigation.goBack()
+            }
         } catch (e) {
             alert.alertError(e)
         }
@@ -116,7 +121,8 @@ export default function ({route}) {
                     onChangeText={v => setRep({...rep, name: v})}
                     onSubmitEditing={save}
                 />
-                <Button mt={5} bg={styles.success} onPress={save}>NEXT</Button>
+                <Button mt={5} bg={styles.success} onPress={() => save(false)}>SAVE</Button>
+                <GhostButton mt={5} variant='outline' onPress={() => save(true)}>Add songs</GhostButton>
                 {
                     !route.params?.id && !fileResponse ?
                     <GhostButton  

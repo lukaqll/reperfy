@@ -12,8 +12,7 @@ const saveHandle = async (content, fileName) => {
     if (granted != PermissionsAndroid.RESULTS.GRANTED) {
         throw 'App without permission'
     }
-    
-    console.log(granted)
+
     if (!content.name)
         throw "Nada a ser salvo"
     

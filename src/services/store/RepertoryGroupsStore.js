@@ -160,6 +160,23 @@ class RepertoryStore{
 
         return grouped
     }
+
+    async fingWithLastIdx(groupId) {
+        let result = await Database.executeSql(`
+            SELECT 
+                g.*,
+                rs.id, rs.idx as songs_idx
+            FROM 
+                repertory_groups g
+            LEFT JOIN repertory_songs rs
+                ON rs.group_id = g.id
+            WHERE g.id = ?
+            GROUP BY g.id 
+            HAVING MAX(rs.idx)
+        `, [groupId]);
+
+        return result.rows.item(0)
+    }
 }
 
 export default new RepertoryStore;

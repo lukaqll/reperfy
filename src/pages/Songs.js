@@ -1,14 +1,11 @@
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { Box, CloseIcon, FlatList, HamburgerIcon, HStack, Input, Menu, SearchIcon, Pressable, VStack, Button, Fab, IconButton } from "native-base";
+import { Box, HStack, Menu, Pressable, VStack } from "native-base";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import SongStore from "../services/store/SongStore";
-import Icon from 'react-native-vector-icons/FontAwesome5'
 import FeaterIcon from 'react-native-vector-icons/Feather'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
-import FLoatButton from "../components/FLoatButton";
 import { Alert, StyleSheet } from "react-native";
 import AlphabetList from "react-native-flatlist-alphabet";
-import useCifrasRepo from "../services/repos/cifras";
 import useStyle from "../styles";
 import Text from '../components/Text'
 import Heading from '../components/Heading'
@@ -16,6 +13,7 @@ import InputSearch from "../components/InputSearch";
 import GradientPageBase from "../components/GradientPageBase";
 import useLang from "../utils/useLang";
 import EmptySongs from "../components/Empty/EmptySongs";
+import Button from "../components/Button";
 
 export default function () {
 
@@ -77,7 +75,7 @@ export default function () {
                             )}
                         >
                             <Menu.Item onPress={() => navigation.navigate('AddSong', {id: item.id})} >
-                                <FeaterIcon name='edit' size={15}/>
+                                <FeaterIcon color='#444' name='edit' size={15}/>
                                 {lang('Edit')}
                             </Menu.Item>
                             <Menu.Item onPress={() => deleteSong(item.id)} _text={{color: styles.danger}}>
@@ -99,6 +97,12 @@ export default function () {
         );
     };
 
+    const filteredSongs = songs.filter(i => (
+        !songSearch
+        || i.name?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(songSearch.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")) 
+        || i.artist?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(songSearch.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")))
+    ).map(s => ({...s, value: s.name || '', key: s.id}))
+
     return (
         <GradientPageBase >
             <Box p={3} h='100%' pb={0}>
@@ -114,14 +118,9 @@ export default function () {
                 <Box flex={1}  h='100%'>
                     <Box>
                         {
-                            !!songs.length && !loading ?
+                            !!filteredSongs.length && !loading ?
                             <AlphabetList
-                                data={songs.filter(i => (
-                                        !songSearch
-                                        || i.name?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(songSearch.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")) 
-                                        || i.artist?.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "").includes(songSearch.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "")))
-                                    ).map(s => ({...s, value: s.name || '', key: s.id}))
-                                }
+                                data={filteredSongs}
                                 renderItem={renderSongItem}
                                 renderSectionHeader={renderSectionHeader}
                                 indexLetterSize={15}
@@ -131,7 +130,10 @@ export default function () {
                                 alphabetContainer={{
                                     alignSelf: "flex-start",
                                 }}
-                            /> : null
+                            /> : 
+                            <Box h='100%' justifyContent='center'>
+                                <Button onPress={() => navigation.navigate('AddSong', {song: {name: songSearch}})}>Add this searched song</Button>
+                            </Box>
                         }
                         {
                             !songs.length && !loading ?

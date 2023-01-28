@@ -54,6 +54,11 @@ export default function (props) {
         props.onSave(song)
     }
 
+    function backHandle() {
+        setCifraHTML(null)
+        props?.onBack()
+    }
+
     return (
         
         <NativeModal 
@@ -113,7 +118,8 @@ export default function (props) {
                                 }
 
                                 <Button.Group isAttached >
-                                    <Button variant='outline' borderColor={styles.bg} _text={{color: styles.primary}} size='sm' onPress={editHandle}>{lang(editMode ? 'Alterar tom' : 'Editar')}</Button>
+                                    <Button variant='outline' borderColor={styles.bg} _text={{color: styles.primary}} size='sm' onPress={backHandle}>{lang('Back')}</Button>
+                                    <Button variant='outline' borderColor={styles.bg} _text={{color: styles.primary}} size='sm' onPress={editHandle}>{lang(editMode ? 'Change tone' : 'Edit')}</Button>
                                     <Button variant='outline' borderColor={styles.bg} _text={{color: styles.primary}} size='sm' onPress={saveHandle}>OK</Button>
                                 </Button.Group>
                             </HStack>
@@ -126,36 +132,36 @@ export default function (props) {
                     <Box >
                     {
                         !editMode ?
-                            <Box >
-                                <HTMLCipher h='93.5%' song={{cipher: cifraHTML}}/>
-                            </Box>
-                            :
-                            <Box>
-                                <KeyboardAvoidingView behavior="padding" enabled keyboardVerticalOffset={149}>
-                                    <ScrollView h='94%'>
-                                        <Box p={2}>
-                                            <AlertDialog status="info" colorScheme="info">
-                                                <HStack flexShrink={1} space={2} alignItems="center" justifyContent="space-between">
-                                                    <HStack flexShrink={1} space={2} alignItems="center">
-                                                        <AlertDialog.Icon />
-                                                        <Box pl="6" flex={1}>
-                                                            {lang('When editing a chord manually, tone change may not behave correctly')}
-                                                        </Box>
-                                                    </HStack>
+                        <Box >
+                            <HTMLCipher h='96.9%' song={{cipher: cifraHTML}}/>
+                        </Box>
+                        :
+                        <Box>
+                            <KeyboardAvoidingView behavior="padding" enabled>
+                                <ScrollView h='97.9%'>
+                                    <Box p={2}>
+                                        <AlertDialog status="info" colorScheme="info">
+                                            <HStack flexShrink={1} space={2} alignItems="center" justifyContent="space-between">
+                                                <HStack flexShrink={1} space={2} alignItems="center">
+                                                    <AlertDialog.Icon />
+                                                    <Box pl="6" flex={1}>
+                                                        {lang('When editing a chord manually, tone change may not behave correctly')}
+                                                    </Box>
                                                 </HStack>
-                                            </AlertDialog>
-                                        </Box>
+                                            </HStack>
+                                        </AlertDialog>
+                                    </Box>
 
-                                        <RichEditor
-                                            ref={richText}
-                                            onChange={setCifraHTML}
-                                            initialHeight={250}
-                                            initialContentHTML={cifraHTML}
-                                        />
-                                    </ScrollView>
-                                </KeyboardAvoidingView>
-                            </Box>
-                        }
+                                    <RichEditor
+                                        ref={richText}
+                                        onChange={setCifraHTML}
+                                        initialHeight={250}
+                                        initialContentHTML={cifraHTML}
+                                    />
+                                </ScrollView>
+                            </KeyboardAvoidingView>
+                        </Box>
+                    }
                     </Box>
 
                 </Box>

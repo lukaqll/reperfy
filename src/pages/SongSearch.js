@@ -91,9 +91,9 @@ export default function () {
                     />
                 </Box>
                 <Banner/>
-                <Box>
-                    <ScrollView h={height-150} keyboardShouldPersistTaps='handled'>
-                        <VStack space={3} p={3}>
+                <Box h='100%'>
+                    <ScrollView h='100%' keyboardShouldPersistTaps='handled'>
+                        <VStack h='100%' space={3} p={3}>
                             {
                                 songs.map((s, i) => (
                                     <RenderSearchedSongList 

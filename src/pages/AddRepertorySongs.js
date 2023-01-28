@@ -1,9 +1,9 @@
-import { Box, Checkbox, CloseIcon, Divider, FlatList, FormControl, Pressable,  HStack, Menu, SearchIcon, VStack, HamburgerIcon, Toast, ScrollView, Fab, Modal, CheckIcon } from "native-base";
-import React, { useEffect, useState } from "react";
+import { Box, FlatList, Pressable,  HStack, Menu, VStack, HamburgerIcon, ScrollView, Modal, View, Toast, } from "native-base";
+import React, { useEffect, useRef, useState } from "react";
 import SongStore from "../services/store/SongStore";
 import RepertoryStore from "../services/store/RepertoryStore";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { ActivityIndicator, Alert, Keyboard, TouchableOpacity, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Alert, Keyboard, TouchableOpacity, useWindowDimensions, Modal as RNModal, ToastAndroid } from "react-native";
 import FLoatButton from "../components/FLoatButton";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import RepertorySongsStore from "../services/store/RepertorySongsStore";
@@ -36,11 +36,13 @@ export default function ({route}) {
     const [addGroupSongsId, setAddGroupSongsId] = useState()
     const [groupsToOrder, setGroupsToOrder] = useState([])
     const [scrollEnabled, setScrollEnabled] = useState(true)
+    const [allAddedSongs, setAllAddedSongs] = useState([])
 
     const isFocused = useIsFocused()
     const navigation = useNavigation()
     const styles = useStyle()
     const lang = useLang()
+    const modalToast = useRef()
 
     const {height} = useWindowDimensions()
 
@@ -232,7 +234,7 @@ export default function ({route}) {
     /**
      * on select song
      */
-    function onSelectHandle(id, isSelected) {
+    async function onSelectHandle(id, isSelected) {
 
         let selSongsId = [...selectedSongIds]
 
@@ -245,16 +247,21 @@ export default function ({route}) {
             }
         }
 
-        setSelectedSongIds([...selSongsId])
+        setSelectedSongIds(selSongsId)
     }
 
     function renderSelectableSong({item}) {
         const isSelected = selectedSongIds.includes(item.id)
-
+        const inRep = allAddedSongs.find(i => (i.song_id == item.id && i.group_id != addGroupSongsId))
+        let inGroup = {}
+        if (inRep) {
+            inGroup = rep.groups.find(i => i.id == inRep.group_id)
+        }
         return (
             <Box ml={3}>
                 <Pressable
                     onPress={() => onSelectHandle(item.id, isSelected)}
+                    _pressed={{opacity: .5}}
                 >
                     <HStack alignItems='center' justifyContent='space-between'>
                         <HStack alignItems='center'>
@@ -264,9 +271,21 @@ export default function ({route}) {
                                 <Text fontSize='xs'>{item.artist}</Text>
                             </VStack>
                         </HStack>
-                        {
-                            !!item.cipher ? <Icon color={styles.fontColor} size={20} name='playlist-music-outline'/> : null
-                        }
+                        <HStack space={3}>
+                            {
+                                !!inRep && !!inRep.song_id ? 
+                                    <Pressable onPress={() => {
+                                        ToastAndroid.show(lang('Already in group') + ' ' + inGroup.name, ToastAndroid.CENTER)                                           
+
+                                    }}>
+                                        <Icon color={styles.fontColor} size={20} name='information-outline'/>
+                                    </Pressable>
+                                : null
+                            }
+                            {
+                                !!item.cipher ? <Icon color={styles.fontColor} size={20} name='playlist-music-outline'/> : null
+                            }
+                        </HStack>
                     </HStack>
                 </Pressable>
             </Box>
@@ -324,132 +343,150 @@ export default function ({route}) {
         );
     };  
 
+    function getAllAddedSongs() {
+        if (rep && rep.groups) {
+            let allSongsIds = []
+            for (g of rep.groups) {
+                for (s of g.songs) {
+                    allSongsIds.push({group_id: g.id, song_id: s.id})
+                }
+            }
+            setAllAddedSongs([...allSongsIds])
+        }
+    }
+
     return (
         <GradientPageBase >
             <Box h='100%' >
-                <Box onLayout={(event) => {setFormSize(event.nativeEvent.layout)}}>
-                    <VStack space={1} px={4}>
-                        <Text fontSize='xs' alignSelf='center'>Add groups to repertoire to link songs</Text>
-                        <Button mt={2} bg={styles.primary} onPress={() => setModalGroup(true)}>ADD GROUP</Button>
-                        {
-                            rep.groups && rep.groups.length > 1 ?
-                            <GhostButton onPress={orderGroupModeHandle}>Change groups order</GhostButton>
-                            : null
-                        }
-                    </VStack>
-                </Box>
-                <Box >
-                    <ScrollView style={{height: (height - (formSize.height || 0) - 70)}} scrollEnabled={scrollEnabled}>
-                    {
-                        rep.groups ? rep.groups.map((g, i) => (
-                            <Box p={2} key={i} >
-                                <Box bg={styles.bgDark} rounded='lg' p={2}>
-                                    <HStack justifyContent='space-between' alignItems='center'>
-                                        <Heading size='sm'>{g.name}</Heading>
-                                        <Menu
-                                            placement="left"
-                                            trigger={props => (
-                                                <Pressable {...props}>
-                                                    <FeaterIcon name='more-vertical' size={20} color={styles.fontColor}/>
-                                                </Pressable>
-                                            )}
+                
+                <ScrollView style={{height: '100%'}} scrollEnabled={scrollEnabled}>
+                    <Box onLayout={(event) => {setFormSize(event.nativeEvent.layout)}}>
+                        <VStack space={1} px={4}>
+                            <Text fontSize='xs' alignSelf='center'>Add groups to repertoire to link songs</Text>
+                            <Button mt={2} bg={styles.primary} onPress={() => setModalGroup(true)}>ADD GROUP</Button>
+                            {
+                                rep.groups && rep.groups.length > 1 ?
+                                <GhostButton onPress={orderGroupModeHandle}>Change groups order</GhostButton>
+                                : null
+                            }
+                        </VStack>
+                    </Box>
+                {
+                    rep.groups ? rep.groups.map((g, i) => (
+                        <Box p={2} key={i} >
+                            <Box bg={styles.bgDark} rounded='lg' p={2}>
+                                <HStack justifyContent='space-between' alignItems='center'>
+                                    <Heading size='sm'>{g.name} ({g.songs.length})</Heading>
+                                    <Menu
+                                        placement="left"
+                                        trigger={props => (
+                                            <Pressable {...props}>
+                                                <FeaterIcon name='more-vertical' size={20} color={styles.fontColor}/>
+                                            </Pressable>
+                                        )}
+                                    >
+                                        <Menu.Item onPress={() => {
+                                            setAddGroupSongsId(g.id)
+                                            getAllAddedSongs()
+                                        }}>
+                                            <FeaterIcon color='#444' name='plus' size={15}/>
+                                            {lang('Link songs')}
+                                        </Menu.Item>
+                                        <Menu.Item onPress={() => {
+                                                setGroup({...g})
+                                                setModalGroup(true)
+                                            }}
                                         >
-                                            <Menu.Item onPress={() => setAddGroupSongsId(g.id)}>
-                                                <FeaterIcon name='plus' size={15}/>
-                                                {lang('Link songs')}
-                                            </Menu.Item>
-                                            <Menu.Item onPress={() => {
-                                                    setGroup({...g})
-                                                    setModalGroup(true)
-                                                }}
-                                            >
-                                                <FeaterIcon name='edit' size={15}/>
-                                                {lang('Edit')}
-                                            </Menu.Item>
-                                            <Menu.Item _text={{color: styles.danger}} onPress={() => deleteGroupHandle(g.id)}>
-                                                <FeaterIcon name='trash' size={15} color={styles.danger}/>
-                                                {lang('Delete')}
-                                            </Menu.Item>
+                                            <FeaterIcon color='#444' name='edit' size={15}/>
+                                            {lang('Edit')}
+                                        </Menu.Item>
+                                        <Menu.Item _text={{color: styles.danger}} onPress={() => deleteGroupHandle(g.id)}>
+                                            <FeaterIcon name='trash' size={15} color={styles.danger}/>
+                                            {lang('Delete')}
+                                        </Menu.Item>
 
-                                        </Menu>
-                                    </HStack>
-                                </Box>
-                                <GestureHandlerRootView >
-                                    <DraggableFlatList
-                                        data={g.songs}
-                                        onDragEnd={({ data }) => dropHandle(g.id, data)}
-                                        onDragBegin={() => setScrollEnabled(false)}
-                                        keyExtractor={(_, i) => i+1}
-                                        renderItem={renderDraggableItem}
-                                    /> 
-                                </GestureHandlerRootView>
+                                    </Menu>
+                                </HStack>
                             </Box>
-                        )) : null
-                    }
-                    </ScrollView>
-                </Box>
+                            <GestureHandlerRootView >
+                                <DraggableFlatList
+                                    data={g.songs}
+                                    onDragEnd={({ data }) => dropHandle(g.id, data)}
+                                    onDragBegin={() => setScrollEnabled(false)}
+                                    keyExtractor={(_, i) => i+1}
+                                    renderItem={renderDraggableItem}
+                                /> 
+                            </GestureHandlerRootView>
+                        </Box>
+                    )) : null
+                }
+                </ScrollView>
 
                 {/**
                  * add songs to group
                  */}
-                <Modal isOpen={!!addGroupSongsId} onClose={() => setAddGroupSongsId(null)} size='full'>
-                    <Modal.Content bg={styles.bg}>
-                        <Modal.Header bg={styles.bg} _text={{color: styles.fontColor}}>
-                        
-                            <Modal.CloseButton/>
-                            <Box>
-                                <VStack>
-                                    <Heading fontSize="md">{lang('Link songs')}</Heading>
-                                    <Box mt={2}>
-                                        <InputSearch
-                                            value={songSearch} onChangeText={setSongSearch}
-                                            onClean={() => setSongSearch(null)}
-                                        />
-                                        <Text>{lang('Selected')}: ({selectedSongIds.length})</Text>
+                <RNModal 
+                    animationType="slide"
+                    visible={!!addGroupSongsId} onRequestClose={() => setAddGroupSongsId(null)} size='full'
+                >
+
+                    <View bg={styles.bg}>
+                        <Box h='100%' p={3}>
+                            <ScrollView>
+                                <Box bg={styles.bg} _text={{color: styles.fontColor}}>
+                                    <Box>
+                                        <VStack>
+                                            <Heading fontSize="md">{lang('Link songs')}</Heading>
+                                            <Box mt={2}>
+                                                <InputSearch
+                                                    value={songSearch} onChangeText={setSongSearch}
+                                                    onClean={() => setSongSearch(null)}
+                                                />
+                                                <Text>{lang('Selected')}: ({selectedSongIds.length})</Text>
+                                            </Box>
+                                        </VStack>
                                     </Box>
+                                </Box>
+                                <Box >
+                                    
+                                    <Box >
+                                        <FlatList
+                                            w='100%'
+                                            keyboardShouldPersistTaps='handled'
+                                            keyExtractor={(_,i) => i}
+                                            data={getFilteredSongs()}
+                                            renderItem={renderSelectableSong}
+                                            ListFooterComponent={
+                                                <GhostButton 
+                                                    mt={5}
+                                                    variant='outline'
+                                                    onPress={() => {
+                                                        setAddGroupSongsId(null)
+                                                        navigation.navigate('AddSong', {
+                                                            redirect: {
+                                                                to: 'AddRepertorySongs',
+                                                                params: {
+                                                                    groupId: addGroupSongsId,
+                                                                    id: rep.id,
+                                                                }
+                                                            }
+                                                        })
+                                                    }}
+                                                >Add a new song</GhostButton>
+                                            }
+                                        />
+                                    </Box>
+                                </Box>
+                            </ScrollView>
+                            <Box mt={3}>
+                                <VStack space={2}>
+                                    <GhostButton onPress={() => setAddGroupSongsId(null)}>Fechar</GhostButton>
+                                    <Button onPress={attachSongsHandle}>SAVE</Button>
                                 </VStack>
                             </Box>
-                        </Modal.Header>
-                        <Modal.Body>
-
-                            <Box flex={1}>
-                                
-                                <Box >
-                                    <FlatList
-                                        w='100%'
-                                        keyboardShouldPersistTaps='handled'
-                                        keyExtractor={(_,i) => i}
-                                        data={getFilteredSongs()}
-                                        renderItem={renderSelectableSong}
-                                        ListFooterComponent={
-                                            <GhostButton 
-                                                mt={5}
-                                                variant='outline'
-                                                onPress={() => {
-                                                    setAddGroupSongsId(null)
-                                                    navigation.navigate('AddSong', {
-                                                        redirect: {
-                                                            to: 'AddRepertorySongs',
-                                                            params: {
-                                                                groupId: addGroupSongsId,
-                                                                id: rep.id,
-                                                            }
-                                                        }
-                                                    })
-                                                }}
-                                            >Add a new song</GhostButton>
-                                        }
-                                    />
-                                </Box>
-                            </Box>
-                        </Modal.Body>
-                        <Modal.Footer bg={styles.bg} >
-                            <Box flex={1}>
-                                <Button onPress={attachSongsHandle}>SAVE</Button>
-                            </Box>
-                        </Modal.Footer>
-                    </Modal.Content>
-                </Modal>
+                        </Box>
+                    </View>
+                </RNModal>
 
                 <Modal 
                     isOpen={modalGroup} 
